@@ -4,83 +4,115 @@ const productSchema=require('../models/productModel')
 const userSchema=require('../models/userModel')
 const cartHelper=require('../helpers/cartHelper')
 const paginationHelper=require('../helpers/paginationHelper')
+const paymentHelper = require('../helpers/paymentHelper')
+const crypto=require('crypto')
+const {RAZORPAY_KEY_SECRET}=process.env
+const couponHelper=require('../helpers/couponHelper')
+const couponSchema=require('../models/couponModel')
 
 module.exports={
-    placeorder:async(req,res)=>{
-        try{
-            const {user}=req.session
-            const products=await cartHelper.totalCartPrice(user)
-            const {paymentMethod,addressId,walletAmount}=req.body
+
+    placeOrder : async ( req, res ) => {
+        try {
+            const { user } = req.session
+            const products =  await cartHelper.totalCartPrice( user )
+            const { paymentMethod, addressId, walletAmount } = req.body
             let walletBalance
-            
-            if(walletAmount){
-                walletBalance=Number(walletAmount)
+            if( walletAmount ){
+                walletBalance = Number( walletAmount )
             }
-            
-            const productItems=products[0].items
-            console.log(productItems)
-            const cartProducts=productItems.map((items)=>({
-                productId:items.productId,
-                quantity:items.quantity,
-                price:(items.totalPrice/items.quantity)
+            const productItems = products[0].items
+            const cartProducts = productItems.map( ( items ) => ({
+                productId : items.productId,
+                quantity : items.quantity,
+                price : ( items.totalPrice / items.quantity )
             }))
-            console.log(cartProducts)
-        
-            const totalAmount=await cartHelper.totalCartPrice(user)
-            totalPrice=totalAmount[0].total
-            let walletUsed,amountPayable
-            if(walletAmount){
-                if(totalPrice>walletBalance){
-                    amountPayable=totalPrice-walletBalance
-                    walletUsed=walletBalance
-                }else if(walletBalance>totalPrice){
-                    amountPayable=0
-                    walletUsed=totalPrice
-                }
-            }else{
-                amountPayable=totalPrice
+            const cart = await cartSchema.findOne({ userId : user })
+            const totalAmount = await cartHelper.totalCartPrice( user )
+            let discounted
+            if( cart && cart.coupon && totalAmount && totalAmount.length > 0 ) {
+                discounted = await couponHelper.discountPrice( cart.coupon, totalAmount[0].total )
+                await couponSchema.updateOne({ _id : cart.coupon},{
+                    $push : {
+                        users : user
+                    }
+                })
             }
-            paymentMethod==='COD'? orderStatus='Confirmed':orderStatus='Pending';
-            const order=new orderSchema({
-                userId:user,
-                products:cartProducts,
-                totalPrice:totalPrice,
-                paymentMethod:paymentMethod,
-                orderStatus:orderStatus,
-                address:addressId,
-                walletUsed:walletUsed,
-                amountPayable:amountPayable
+            const totalPrice = discounted && discounted.discountedTotal ? discounted.discountedTotal : totalAmount[0].total
+            let walletUsed, amountPayable
+            if( walletAmount ) {
+                if( totalPrice > walletBalance ) {
+                    amountPayable = totalPrice - walletBalance
+                    walletUsed = walletBalance
+                } else if( walletBalance > totalPrice ) {
+                    amountPayable = 0
+                    walletUsed = totalPrice
+                }
+            } else {
+                amountPayable = totalPrice
+            }
+            const generatedID = Math.floor(100000 + Math.random() * 900000);
+            let existingOrder = await orderSchema.findOne({ orderId: generatedID });
+    
+            // Loop until a unique order ID is generated
+            while (existingOrder) {
+                generatedID = Math.floor(100000 + Math.random() * 900000);
+                existingOrder = orderSchema.findOne({ orderId: generatedID });
+            }
+    
+            // Use the generated unique orderId for the new order
+            const orderId = `ORD${generatedID}`;
+            
+            paymentMethod === 'COD' ? orderStatus = 'Confirmed' : orderStatus = 'Pending';
+            if( amountPayable === 0) { orderStatus = 'Confirmed' }
+            const order = new orderSchema({
+                userId : user,
+                orderId:orderId,
+                products : cartProducts,
+                totalPrice : totalPrice,
+                paymentMethod : paymentMethod,
+                orderStatus : orderStatus,
+                address : addressId,
+                walletUsed : walletUsed,
+                amountPayable : amountPayable
             })
-            await order.save()
-            //Decreasing the quantity
-            for(const items of cartProducts){
-                const {productId,quantity}=items
-                await productSchema.updateOne({_id:productId},
-                    {$inc:{quantity:-quantity}})
-            }
-            //Deleting cart
-            await cartSchema.deleteOne({userId:user})
-            req.session.productCount=0
-            if(paymentMethod==='COD' || amountPayable==0){
-                if(walletAmount){
-                    await userSchema.updateOne({_id:user},{
-                        $inc:{
-                            wallet:-walletUsed
-                        },
-                        $push:{
-                            walletHistory:{
-                                date:Date.now(),
-                                amount:-walletUsed,
-                                message:'Used for purchase'
+            const ordered = await order.save()
+
+            
+
+            // Decreasing quantity
+            for( const items of cartProducts ){
+                const { productId, quantity } = items
+                await productSchema.updateOne({_id : productId},
+                    { $inc : { quantity :  -quantity  }})
+                } 
+            // Deleting cart
+            await cartSchema.deleteOne({ userId : user })
+            req.session.productCount = 0
+            if(  paymentMethod === 'COD' || amountPayable === 0 ){
+                // COD
+                    if( walletAmount ) {
+                        await userSchema.updateOne({ _id : user }, {
+                            $inc : {
+                                wallet : -walletUsed
+                            },
+                            $push : {
+                                walletHistory : {
+                                    date : Date.now(),
+                                    amount : -walletUsed,
+                                    message : 'Used for purachse'
+                                }
                             }
-                        }
-                    })
-                }
-                return res.json({success:true})
+                        })
+                    }
+                    return res.json({ success : true})
+            } else if( paymentMethod === 'razorpay'){
+                // Razorpay 
+                const payment = await paymentHelper.razorpayPayment( ordered._id, amountPayable )
+                res.json({ payment : payment , success : false  })
             }
-        }catch(error){
+        } catch ( error ) {
             res.redirect('/500')
-            console.log(error)
         }
     },
     getConfirmOrder:async(req,res)=>{
@@ -88,6 +120,7 @@ module.exports={
             const {user}=req.session
             await cartHelper.totalCartPrice(user)
             const orders=await orderSchema.find({userId:user}).sort({date:-1}).limit(1).populate('products.productId').populate('address')
+            
             if(orders.orderStatus=='Pending'){
                 await orderSchema.updateOne({_id:orders._id},{
                     $set:{
@@ -95,14 +128,24 @@ module.exports={
                     }
                 })
             }
+            
             const lastOrder=await orderSchema.find({userId:user}).sort({date:-1}).limit(1).populate('products.productId').populate('address')
             res.render('shop/confirm-order',{
                 order:lastOrder,
-                products:lastOrder[0].products
+                products:lastOrder[0].products,
             })
         }catch(error){
             res.redirect('/500')
         }
+    },
+    invoice:async(req,res)=>{
+        const {user}=req.session
+        const {Id}=req.params
+        const lastOrder=await orderSchema.find({_id:Id}).sort({date:-1}).limit(1).populate('products.productId').populate('address')
+        res.render('shop/confirm-order',{
+            order:lastOrder,
+            products:lastOrder[0].products,
+        })
     },
     getAdminOrderlist:async(req,res)=>{
         try{
@@ -238,6 +281,131 @@ module.exports={
         catch(error){
             res.redirect('/500')
         }
+    },
+    razorpayVerifyPayment:async(req,res)=>{
+        const {response,order}=req.body
+        const {user}=req.session
+        let hmac=crypto.createHmac('sha256',RAZORPAY_KEY_SECRET)
+        hmac.update(response.razorpay_order_id+'|'+response.razorpay_payment_id)
+        hmac=hmac.digest('hex')
+        if(hmac === response.razorpay_signature){
+           
+        
+            const orders=await orderSchema.findOne({_id:order.receipt})
+          
+            console.log(`order is ${orders}`)
+            if(orders.walletUsed){
+                await userSchema.updateOne({_id:user},{
+                    $inc:{
+                        wallet:-orders.walletUsed
+                    },
+                    $push:{
+                        walletHistory:{
+                            date:Date.now(),
+                            amount:-orders.walletUsed,
+                            message:'Used for Purchase'
+                        }
+                    }
+                })
+            }
+            await orderSchema.updateOne({_id:order.receipt},{
+                $set:{orderStatus:"Confirmed"}
+            })
+            res.json({paid:hmac === response.razorpay_signature})
+        }else{
+            res.json({paid:false})
+        }
+    },
+   getReturn:async(req,res)=>{
+    const orderId=req.params.id
+    console.log(orderId)
+    res.render('shop/return',{orderId:orderId})
+   },
+   returnOrder:async(req,res)=>{
+    const orderId=req.query.orderId
+    const {user}=req.session
+    const reason=req.body.returnReason
+    const message=req.body.message
+    const order=await orderSchema.findOne({_id:orderId})
+    if(reason === 'Other'){
+        for(let products of order.products){
+            await productSchema.updateOne({_id:products.productId},{
+                $inc:{
+                    quantity: products.quantity
+                }
+            })
+        }
     }
+    await orderSchema.updateOne({_id:orderId},{
+        $set:{
+            orderStatus:'Returned',ReturnReason:message
+        }
+    })
+    await userSchema.updateOne({_id:user},{
+        $inc:{
+            wallet:order.totalPrice
+        },
+        $push:{
+            walletHistory:{
+                date:new Date(),
+                amount:order.totalPrice,
+                message:"Deposit on return"
+            }
+        }
+    },)
+    res.redirect('/user/orders')
+    
+   },
+   getSalesReport:async(req,res)=>{
+        const {from,to,seeAll,sortData,sortOrder}=req.query
+        let page = Number(req.query.page);
+            if (isNaN(page) || page < 1) {
+            page = 1;
+            }
+            const conditions={}
+            if(from && to){
+                conditions.date={
+                    $gte:from,
+                    $lte:to
+                }
+            }else if(from){
+                conditions.date={
+                    $lte:from
+                }
+            }else if(to){
+                conditions.date={
+                    $lte:to
+                }
+            }
+            const sort={}
+            if(sortData){
+                if(sortOrder==="Ascending"){
+                    sort[sortData]=1
+                }else if(sortOrder==="Descending"){
+                    sort[sortData]=-1
+                }
+            }else{
+                sort['date'] = sortOrder === "Ascending" ? 1 : -1;
+            }
+            const orderCount=await orderSchema.countDocuments()
+            const limit = seeAll==="seeAll" ? orderCount:paginationHelper.SALES_PER_PAGE;
+            const orders=await orderSchema.find(conditions).sort(sort).skip(( page - 1 ) * paginationHelper.ORDER_PER_PAGE ).limit(limit)
+            res.render( 'admin/sales-report', {
+                admin : true,
+                orders : orders,
+                from : from,
+                to : to, 
+                seeAll : seeAll,
+                currentPage : page,
+                hasNextPage : page * paginationHelper.SALES_PER_PAGE < orderCount,
+                hasPrevPage : page > 1,
+                nextPage : page + 1,
+                prevPage : page -1,
+                lastPage : Math.ceil( orderCount / paginationHelper.SALES_PER_PAGE ),
+                sortData : sortData,
+                sortOrder : sortOrder
+            })  
+    
+   }
 
 }

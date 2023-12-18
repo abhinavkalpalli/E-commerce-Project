@@ -5,10 +5,22 @@ const {search}=require('../routers/shopRouter');
 const paginationHelper=require('../helpers/paginationHelper');
 const cartHelper = require('../helpers/cartHelper');
 const addressSchema=require('../models/addressModel')
+const cartSchema=require('../models/cartModel')
+const couponHelper=require('../helpers/couponHelper')
 
 module.exports={
     getHome:async(req,res)=>{
-        const products =await productSchema.find({status:true}).populate('category')
+        const products =await productSchema.find({status:true}).populate({
+            path : 'offer',
+            match :  { startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() }}
+        })
+        .populate({
+            path : 'category',
+            populate : {
+                path : 'offer',
+                match : { startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() }}
+            }
+        })
         res.render('shop/home',{products:products})
     
     },
@@ -34,8 +46,16 @@ module.exports={
                 ]
             }
             const productCount=await productSchema.find(condition).count()
-            const products=await productSchema.find(condition).populate({
-                path:'category'
+            const products=await productSchema.find(condition) .populate({
+                path : 'offer',
+                match :  { startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() }}
+            })
+            .populate({
+                path : 'category',
+                populate : {
+                    path : 'offer',
+                    match : { startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() }}
+                }
             })
             .skip( ( page - 1 ) * paginationHelper.ITEMS_PER_PAGE ).limit( paginationHelper.ITEMS_PER_PAGE )  // Pagination
             const category = await categorySchema.find({ status: true }) 
@@ -67,36 +87,50 @@ module.exports={
     },
     getSingleProduct:async(req,res)=>{
         try{
-            const userLoggedin=req.session.user
-            const product=await productSchema.find({_id:req.params.id,status:true}).populate('category').limit(4)
-            const related=await productSchema.find({status:true}).populate('category').limit(4)
-            res.render('shop/single-product',{
-                product:product,
-                related:related
+            const product = await productSchema.find({ _id : req.params.id, status : true })
+            .populate({
+                path : 'offer',
+                match :  { startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() }}
             })
+            .populate({
+                path : 'category',
+                populate : {
+                    path : 'offer',
+                    match : { startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() }}
+                }
+            })  
+            res.render( 'shop/single-product', {
+                product : product,})    
         }catch(error){
             res.redirect('/500')
             console.log(error)
         }
     },
-    getCheckout:async(req,res)=>{
-        try{
-            const{user}=req.session
-            const cartAmount=await cartHelper.totalCartPrice(user)
-            const cart=await categorySchema.findOne({userId:user})
-            const userDetails=await userSchema.findOne({_id:user})
-            const address=await userSchema.findOne({_id:user}).populate('address')
-            const addresses=address.address.reverse()
-            res.render('shop/checkout',{
-                cartAmount:cartAmount,
-                address:addresses,
-                user:userDetails
+    getCheckout : async( req, res ) => {
+        try {
+            const { user } = req.session
+            const cartAmount = await cartHelper.totalCartPrice( user )
+            const cart = await cartSchema.findOne({ userId : user })
+            const userDetails = await userSchema.findOne({ _id : user })
+            let discounted
+            if( cart && cart.coupon && cartAmount && cartAmount.length > 0 ) {
+                discounted = await couponHelper.discountPrice( cart.coupon, cartAmount[0].total )
+            }
+            const address = await userSchema.findOne({ _id : user }).populate( 'address' )
+            const addresses = address.address.reverse()
+            res.render( 'shop/checkout', {
+                cartAmount : cartAmount,
+                address : addresses,
+                discounted : discounted,
+                user : userDetails
             })
-
-        }catch(error){
+        } catch ( error ) {
             res.redirect('/500')
+            console.log(error)
+
         }
     },
+
     getCheckoutAddAddress:async(req,res)=>{
         res.render('shop/checkout-address')
     },

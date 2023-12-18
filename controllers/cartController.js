@@ -1,32 +1,64 @@
 const cartHelper = require('../helpers/cartHelper');
 const cartSchema=require('../models/cartModel')
 const productSchema=require('../models/productModel')
+const couponSchema=require('../models/couponModel')
+const couponHelper=require('../helpers/couponHelper')
 module.exports={
-    getCart:async(req,res)=>{
-        try{ 
-            const {user}=req.session;
-    
-            const productCount =await cartHelper.updateQuantity(user)
-            if(productCount ===1 ){
+    getCart : async( req, res ) => {
+        try {
+            const { user } = req.session;   
+             let discounted
+            const productCount = await cartHelper.updateQuantity( user )
+            if( productCount === 1 ){
                 req.session.productCount--
             }
-            const updatedCart=await cartSchema.findOne({userId:user}).populate({
-                path:'items.productId',
-                populate:[{
-                    path:'category'
-                }]
-            })
-            const totalPrice=await cartHelper.totalCartPrice(user)
-            if(updatedCart && updatedCart.items>0){
-                req.session.productCount=updatedCart.items.length
+            const updatedCart = await cartSchema.findOne({ userId : user }).populate({
+                path : 'items.productId',
+                populate : [{
+                    path : 'category',
+                    populate : {
+                        path : 'offer'
+                    },
+                },
+                    {
+                    path : 'offer'
+                    }
+                ]
+            });
+            
+            const totalPrice = await cartHelper.totalCartPrice( user )
+
+            if( updatedCart && updatedCart.items > 0 ){
+                console.log(updatedCart.items.length);
+                req.session.productCount = updatedCart.items.length
+                updatedCart.items.forEach(( items ) => {
+                
+                    if( items.productId.offer && items.productId.offer.startingDate <= new Date() && items.productId.offer.expiryDate >= new Date() ) {
+                        items.productId.price = (items.productId.price * ( 1 - ( items.productId.offer.percentage / 100 ))).toFixed(0)
+                    }else if ( items.productId.category.offer && items.productId.category.offer.startingDate <= new Date() && items.productId.category.offer.expiryDate >= new Date() ) {
+                        items.productId.price = (items.productId.price * ( 1 - ( items.productId.category.offer.percentage / 100 ))).toFixed(0)
+                    }
+                    
+                    return items
+                })
+            } 
+            
+            if( updatedCart && updatedCart.coupon && totalPrice && totalPrice.length > 0 ) {
+                discounted = await couponHelper.discountPrice( updatedCart.coupon, totalPrice[0].total )
             }
-            res.render('shop/cart',{
-                cartItems:updatedCart,
-                totalAmount:totalPrice,
-            })
-        }catch(error){
+            
+            const availableCoupons = await couponSchema.find({ status : true , startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() } })
+
+            res.render( 'shop/cart', {
+                cartItems : updatedCart,
+                totalAmount : totalPrice,
+                availableCoupons : availableCoupons,
+                discounted : discounted
+
+            });
+        } catch ( error ) {
             res.redirect('/500')
-            console.log(error)
+
         }
     },
     addToCart:async (req,res)=>{
@@ -49,6 +81,11 @@ module.exports={
                                 await cartSchema.updateOne({userId:userId,'items.productId':productId},
                                 {$inc:{'items.$.quantity':1}})
                                 const totalPrice=await cartHelper.totalCartPrice(userId)
+                                let discounted
+                                if( cart.coupon && totalPrice && totalPrice.length > 0 ) {
+                                    discounted = await couponHelper.discountPrice( cart.coupon, totalPrice[0].total )
+                                }
+
                                 res.status(200).json({success:true,message:'Added to cart',login:true,totalPrice:totalPrice})
                             }
                             else{
@@ -98,9 +135,14 @@ module.exports={
                 {$inc:{'items.$.quantity':-1}},
                 {new:true}
                 );
-                if(updatedCart){
-                    const totalPrice=await cartHelper(user)
-                    res.status(200).json({success:true,message:'cart item decreased',totalPrice:totalPrice})
+                if( updatedCart) {
+                    const totalPrice = await cartHelper.totalCartPrice( user )
+                    const cart = await cartSchema.findOne({ userId : user})
+                    let discounted
+                    if( cart.coupon && totalPrice && totalPrice.length > 0 ) {
+                        discounted = await couponHelper.discountPrice( cart.coupon, totalPrice[0].total )   
+                    }
+                    res.status( 200 ).json({ success : true, message : 'cart item decreased', totalPrice : totalPrice, discounted : discounted });
                 }else{
                     res.json({success:false,message:`can't decrease the quantity`})
                 }
@@ -113,14 +155,18 @@ module.exports={
             
             const {user}=req.session
             const {itemId}=req.body
-            const hai=await cartSchema.updateOne({userId:user,'items._id':itemId},
+            await cartSchema.updateOne({userId:user,'items._id':itemId},
             {$pull:{items:{_id:itemId}}})
             req.session.productCount--
             if(req.session.productCount===0){
                 await cartSchema.deleteOne({userId:user})
             }
-            const totalPrice=await cartHelper.totalCartPrice(user)
-            const cart=await cartSchema.findOne({userId:user})
+            const totalPrice = await cartHelper.totalCartPrice(user)
+            const cart = await cartSchema.findOne({ userId : user})
+            let discounted
+            if( cart && cart.coupon && totalPrice && totalPrice.length > 0 ) {
+                discounted = await couponHelper.discountPrice( cart.coupon, totalPrice[0].total )
+            }
             res.status(200).json({success:true,message:'Item removed',removeItem:true,totalPrice:totalPrice})
         }catch(error){
             res.redirect('/500')

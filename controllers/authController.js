@@ -69,8 +69,8 @@ module.exports={
     },
     //getting User Signup page
     getUserSignup:(req,res)=>{
-        const {referral}=req.query
-        res.render('auth/userSignup',{err:req.flash('userExist'),referral:referral})
+        
+        res.render('auth/userSignup',{err:req.flash('userExist')})
     },
     //user Signup
     doUserSignup:async(req,res)=>{
@@ -109,6 +109,7 @@ module.exports={
                     })
                 }
                 req.session.unVerfiedMail=req.body.email
+                req.session.referral=referral
                 res.redirect('/otp-verification')
             }
         }catch(error){
@@ -128,6 +129,7 @@ module.exports={
             const entertime=new Date()
             let {val1,val2,val3,val4,val5,val6}=req.body
             userotp=val1+val2+val3+val4+val5+val6
+            const referral=req.session.referral
 
             //checking otp in database
             const otpCheck=await userSchema.findOne({email:req.session.unVerfiedMail,'token.otp':userotp})
@@ -147,15 +149,15 @@ module.exports={
                         referralCode:referralCode
                         }
                 })
-                if(otpCheck.isReferred){
-                    await userSchema.updateOne({referralCode:otpCheck.isReferred},{
+                if(referral){
+                    await userSchema.updateOne({referralCode:referral},{
                         $inc:{
-                            wallet:40
+                            wallet:50
                         },
                         $push:{
                             walletHistory:{
                                 date:Date.now(),
-                                amount:40,
+                                amount:50,
                                 message:'Referral bonus'
                             }
                         }

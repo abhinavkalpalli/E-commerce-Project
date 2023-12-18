@@ -1,0 +1,117 @@
+<%- include('../includes/userHead.ejs') %>
+<%- include('../includes/userNavbar.ejs') %>
+
+<style>
+    .main-div{
+        display: flex;
+        justify-content: center;
+
+    }
+    .profile-container {
+        /* border: .5px solid #6e6e6e2f; */
+        box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+    }
+    section {
+        width: 80%;
+    }
+    .edit-image{
+        text-decoration: none;
+    }
+    input {
+        border-radius: 0!important;
+    }
+    input.form-control, textarea {
+        background-color: #fff;
+    }
+    input:disabled{
+        border: none;
+        background-color: #fff;
+        font-weight: bold;
+    }
+    .fs--1 a{
+        color: #7a7a7a;
+        padding: 10px;
+    }
+
+    .fs--1 a.active{
+        background-color: #7a7a7a;
+        color: #fff;
+    }
+    
+    .fs--1 a:hover {
+        background-color: #7a7a7a;
+        color: white;
+    }
+</style>
+
+
+
+
+
+<div class="main-div mt-5 mb-5">
+<section class="font-1">
+    <div class="">
+        <div class="row justify-content-center">
+
+            <div class="col-12">
+                <div class="table" style="display: flex; flex-direction: column; justify-content: center;">
+                    <table>
+                        <thead>
+                            <th></th>
+                            <th>Name</th>
+                            <th>Brand</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>total</th>
+                            
+                        </thead>
+                        <tbody>
+                            <% for ( let product of products ){ %>
+                             <% var total = product.price * product.quantity %>
+                            <tr>
+                                <td>
+                                    <img width="100" src="/images/product-images/<%= product.productId.image[0] %>" alt="">
+                                </td>
+                            <td><%= product.productId.name %></td>
+                            <td><%= product.productId.brand %></td>
+                            <td><%= product.price %></td>
+                            <td><%= product.quantity %></td>
+                            <td><%= total %></td>
+                            
+                            
+                            </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                    <div class="pt-2">
+                        <a class="me-auto btn btn-outline-dark rounded-0" href="/user/orders">Back to orders</a>
+                    </div>
+                </div>
+                
+
+            </div>
+        </div>
+        <!--/.row-->
+    </div>
+    <!--/.container-->
+</section>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+
+    // async function returnProduct( orderId, productId, quantity, price ) {
+
+    //     const response = await axios.patch( '/user/return-product', {
+    //         orderId,
+    //         productId,
+    //         quantity,
+    //         price
+    //     } ) 
+    // }
+
+</script>
+
+<%- include('../includes/userFooter.ejs') %>
+<%- include('../includes/end.ejs') %>

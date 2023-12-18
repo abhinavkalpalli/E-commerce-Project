@@ -4,6 +4,7 @@ const productSchema=require('../models/productModel')
 const paginationHelper=require('../helpers/paginationHelper')
 const categorySchema=require('../models/categoryModel')
 const { error } = require('console')
+const offerSchema=require('../models/offerModel')
 
 module.exports={
 
@@ -75,7 +76,8 @@ module.exports={
                 ]
             }
             const productsCount=await productSchema.find(condition).productsCount
-            const products=await productSchema.find(condition).populate('category').sort(sort).skip((page-1)*paginationHelper.PRODUCT_PER_PAGE).limit(paginationHelper.PRODUCT_PER_PAGE)
+            const availableOffers = await offerSchema.find({ status : true, expiryDate : { $gte : new Date() }})
+            const products=await productSchema.find(condition).populate('category').populate('offer').sort(sort).skip((page-1)*paginationHelper.PRODUCT_PER_PAGE).limit(paginationHelper.PRODUCT_PER_PAGE)
             res.render('admin/products',{
                 admin:req.session.admin,
                 products:products,
@@ -87,7 +89,8 @@ module.exports={
                 lastPage : Math.ceil( productsCount / paginationHelper.PRODUCT_PER_PAGE ),
                 search : search,
                 sortData : sortData,
-                sortOrder : sortOrder
+                sortOrder : sortOrder,
+                availableOffers : availableOffers
             })
         }catch(error){
             res.redirect('/500')
@@ -185,6 +188,30 @@ module.exports={
         }catch(error){
             res.redirect('/500')
         }
-    }
+    },
+    applyProductOffer:async(req,res)=>{
+        try{
+            const {offerId,productId}=req.body
+            await productSchema.updateOne({_id:productId},{$set:{
+                offer:offerId
+            }})
+            res.json({success:true})
+        }catch(error){
+            res.redirect('/500')
+        }
+    },
+    removeProductOffer:async(req,res)=>{
+        try{
+            const {productId}=req.body
+            await productSchema.updateOne({_id:productId},{
+                $unset:{
+                    offer:""
+                }
+            })
+            res.json({success:true})
+        }catch(error){
+            res.redirect('/500')
+        }
+    },
     
 }

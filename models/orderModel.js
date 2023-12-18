@@ -7,6 +7,10 @@ const orderSchema=Schema({
         ref:'user',
         required:true
     },
+    orderId:{
+        type:String,
+        default:'ORD'
+    },
     products:[{
         productId:{
             type:mongoose.Types.ObjectId,
@@ -53,6 +57,10 @@ const orderSchema=Schema({
     date:{
         type:Date,
         default:Date.now
+    },
+    ReturnReason:{
+        type:String,
+        required:false
     }
 })
 module.exports=mongoose.model('order',orderSchema)

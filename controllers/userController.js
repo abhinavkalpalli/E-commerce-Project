@@ -1,5 +1,7 @@
 const userSchema=require('../models/userModel')
 const addressSchema=require('../models/addressModel')
+const crypto=require('crypto')
+const paymentHelper=require('../helpers/paymentHelper')
 
 module.exports={
     getUserProfile:async(req,res)=>{
@@ -105,6 +107,51 @@ module.exports={
                 }
             })
             res.status(200).json({success:true})
+        }catch(error){
+            res.redirect('/500')
+        }
+    },
+    addToWallet : async ( req, res ) => {
+        try {
+            const { amount } = req.body
+            const  Id = crypto.randomBytes(8).toString('hex')
+            const payment = await paymentHelper.razorpayPayment( Id, amount )
+            res.json({ payment : payment , success : true  })
+        } catch (error) {
+            res.redirect('/500')
+
+        }
+    },
+    razorpayVerifyPayment : async( req, res ) => {
+        const { user } = req.session
+        const { order } = req.body
+        await userSchema.updateOne({ _id : user }, {
+            $inc : {
+                wallet : ( order.amount ) / 100
+            },
+            $push : {
+                walletHistory : {
+                    date : Date.now(),
+                    amount : ( order.amount ) / 100,
+                    message : "Deposit from payment gateway"
+                }
+            }
+        })
+        res.json({ paid : true })
+    },
+    
+    getwalletHistory:async(req,res)=>{
+        try{
+            const {user}=req.session
+            console.log(user)
+            const userDetails=await userSchema.findOne({_id:user})
+            if (userDetails) {
+                // Sort walletHistory based on the date field in descending order (latest first)
+                userDetails.walletHistory.sort((a, b) => b.date - a.date);
+              }
+            console.log(userDetails)
+            res.render('user/wallet',{user:userDetails})
+
         }catch(error){
             res.redirect('/500')
         }

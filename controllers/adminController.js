@@ -1,26 +1,79 @@
 const userSchema=require('../models/userModel')
 const paginationHelper=require('../helpers/paginationHelper')
 const productSchema=require('../models/productModel')
-const verificationController=require('../controllers/verificationController')
+const orderSchema=require('../models/orderModel')
+const dashboardHelper=require('../helpers/dashboardHelper')
+
 
 
 module.exports={
     getAdminHome:async(req,res)=>{
         try{
+            const today=new Date();
+            today.setHours(0,0,0,0)
+            const yesterday=new Date(today)
+            yesterday.setDate(today.getDate()-1)
+            const now =new Date();
+            const currentYear = new Date().getFullYear();
+            const currentMonth=now.getMonth();
+            const currentMonthStartDate=new Date(currentYear,currentMonth,1,0,0,0)
+            const previousMonthStartDate=new Date(currentYear,currentMonth-1,1,0,0,0)
+            const previousMonthEndDate=new Date(currentYear,currentMonth,0,23,59,59)
             const promises=[
                 productSchema.find({status:true}).count(),
-                userSchema.find({isBlocked:false,isVerified:true,isAdmin:0}).count()
+                userSchema.find({isBlocked:false,isVerified:true,isAdmin:0}).count(),
+                dashboardHelper.currentMonthRevenue(currentMonthStartDate,now),
+                dashboardHelper.previousMonthRevenue(previousMonthStartDate,previousMonthEndDate),
+                dashboardHelper.paymentMethodAmount(),
+                dashboardHelper.todayIncome(today,now),
+                dashboardHelper.yesterdayIncome(today,yesterday),
+                dashboardHelper.totalRevenue(),
+                orderSchema.find({ orderStatus : "Confirmed" }).count(),
+                orderSchema.find({ orderStatus : "Delivered" }).count(),
+                dashboardHelper.dailyChart(),
+                dashboardHelper.categorySales()
+                
             ]
             const results=await Promise.all(promises)
             const productCount=results[0]
             const userCount=results[1]
+            const revenueCurrentMonth=results[2]
+            const revenuePreviousMonth=results[3]
+            const paymentMethodAmount=results[4]
+            const todayIncome=results[5]
+            const yesterdayIncome=results[6]
+            const  totalRevenue=results[7]
+            const ordersToShip=results[8]
+            const completedOrders=results[9]
+            const dailyChart=results[10]
+            const categorySales=results[11]
+            
+            const razorPayAmount=paymentMethodAmount && paymentMethodAmount.length>0?paymentMethodAmount[0].amount.toString():0
+            const codPayAmount=paymentMethodAmount && paymentMethodAmount.length>0?paymentMethodAmount[1].amount.toString():0
+            const monthlyGrowth=revenuePreviousMonth===0?100:(((revenueCurrentMonth-revenuePreviousMonth)/revenuePreviousMonth)*100).toFixed(1);
+            const dailyGrowth = ((( todayIncome - yesterdayIncome ) / yesterdayIncome ) * 100).toFixed( 1 )  
+            
+            
+
             res.render('admin/dashboard',{
-                admin:req.session.admin,
-                productCount:productCount,
-                userCount:userCount
+                admin : req.session.admin,
+                todayIncome : todayIncome,
+                dailyGrowth : dailyGrowth,
+                totalRevenue : totalRevenue,
+                revenueCurrentMonth : revenueCurrentMonth,
+                monthlyGrowth : monthlyGrowth,
+                razorPayAmount : razorPayAmount,
+                codPayAmount : codPayAmount,
+                userCount : userCount,
+                ordersToShip : ordersToShip,
+                completedOrders : completedOrders,
+                productCount : productCount,
+                dailyChart : dailyChart,
+                categorySales : categorySales
             })
         }catch(error){
             res.redirect('/500')
+            console.log(error)
         }
     },
     getUserList:async(req,res)=>{
@@ -68,40 +121,30 @@ module.exports={
             res.redirect('/500')
         }
     },
-    blockUser:async(req,res)=>{
-        try{
-            const userId=req.params.id
-            const userData=await userSchema.findById(userId)
-            await userData.updateOne({$set:{isBlocked:true}})
-
-            //checks if the user is in same browser
-            if(req.session.user === userId){
-                delete req.session.user
-            }
-
-            const sessions =req.sessionStore.sessions;
-            for(const sessionId in sessions){
-                const session=JSON.parse(sessions[sessionId]);
-                if(session.user===userId){
-                    delete sessions[sessionId];
-                    break;
-                }
-            }
-            res.json({success:true})
-        }catch(error){
-            res.redirect('/500')
+    blockUser: async (req, res) => {
+        try {
+            const userId = req.params.id;
+            const userData = await userSchema.findById(userId);
+            await userData.updateOne({ $set: { isBlocked: true } });
+            // Redirect to the admin page after blocking
+            res.redirect('/admin/userList');
+        } catch (error) {
+            console.error(error);
+            res.redirect('/500');
         }
     },
-    unBlockUser:async(req,res)=>{
-        try{
-            const userId=req.params.id
-            const userData=await userSchema.findById(userId)
-            await userData.updateOne({$set:{isBlocked:false}})
-            res.json({success:true})
-        }catch(error){
-            console.log(error)
-            res.redirect('/500')
+
+    unBlockUser: async (req, res) => {
+        try {
+            const userId = req.params.id;
+            const userData = await userSchema.findById(userId);
+            await userData.updateOne({ $set: { isBlocked: false } });
+            
+            // Redirect to the admin page after unblocking
+            res.redirect('/admin/userList');
+        } catch (error) {
+            console.error(error);
+            res.redirect('/500');
         }
-    },
-   
+    },   
 }

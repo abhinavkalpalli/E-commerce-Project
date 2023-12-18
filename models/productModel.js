@@ -36,6 +36,10 @@ const productSchema=Schema({
         type:Boolean,
         default:true
     },
+    offer : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'offer'
+    }
 })
 
 module.exports=mongoose.model('product',productSchema)
