@@ -11,15 +11,16 @@ const productSchema=Schema({
         type:String,
         required:true
     },
-    brand:{
-        type:String,
-        required:true
-    },
     category:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'category',
         required:true
     },
+    brand:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'brand',
+        required:true
+        },
     quantity:{
         type:Number,
         required:true

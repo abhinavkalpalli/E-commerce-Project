@@ -7,6 +7,7 @@ const cartHelper = require('../helpers/cartHelper');
 const addressSchema=require('../models/addressModel')
 const cartSchema=require('../models/cartModel')
 const couponHelper=require('../helpers/couponHelper')
+const brandSchema=require('../models/brandModel')
 
 module.exports={
     getHome:async(req,res)=>{
@@ -59,9 +60,9 @@ module.exports={
             })
             .skip( ( page - 1 ) * paginationHelper.ITEMS_PER_PAGE ).limit( paginationHelper.ITEMS_PER_PAGE )  // Pagination
             const category = await categorySchema.find({ status: true }) 
-            const brands = await productSchema.distinct( 'brand' )
+            const brands = await brandSchema.find({status:true})
             const startingNo = (( page - 1) * paginationHelper.ITEMS_PER_PAGE ) + 1
-            const endingNo = startingNo + paginationHelper.ITEMS_PER_PAGE
+            const endingNo = Math.min(startingNo + paginationHelper.ITEMS_PER_PAGE)
             res.render( 'shop/shop', {
                 userLoggedin:userLoggedin,
                 products  : products,
@@ -73,7 +74,7 @@ module.exports={
                 hasPrevPage : page > 1,
                 nextPage : page + 1,
                 prevPage : page -1,
-                lastPage : Math.ceil( productCount / paginationHelper.ITEMS_PER_PAGE ),
+                lastPage : Math.ceil( productCount / paginationHelper.ITEMS_PER_PAGE||1 ),
                 startingNo : startingNo,
                 endingNo : endingNo,
                 cat : cat,
@@ -118,11 +119,14 @@ module.exports={
             }
             const address = await userSchema.findOne({ _id : user }).populate( 'address' )
             const addresses = address.address.reverse()
+            const flashMessages = req.flash()
             res.render( 'shop/checkout', {
                 cartAmount : cartAmount,
                 address : addresses,
                 discounted : discounted,
-                user : userDetails
+                user : userDetails,
+                 messages: flashMessages 
+
             })
         } catch ( error ) {
             res.redirect('/500')
@@ -154,7 +158,7 @@ module.exports={
                     address:result._id
                 }
             })
-            res.redirect('/checkout')
+            return res.status(200).json({ success: true });
         }catch(error){
             res.redirect('/500')
             console.log(error)

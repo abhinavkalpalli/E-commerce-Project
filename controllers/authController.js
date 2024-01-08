@@ -243,6 +243,25 @@ module.exports={
         }
 
     },
+    forgotresendOtp:async(req,res)=>{
+        try{
+            let email=req.session.unVerfiedMail
+            const otp=verificationController.sendMail(email)
+            await userSchema.updateOne({email:email},{$set:{
+                token:{
+                    otp:otp,
+                    generatedTime:new Date()
+                }
+            }
+            })
+            res.render('auth/forgot-password-otp')
+        }
+        catch(error){
+            res.redirect('/500')
+        }
+
+    },
+    
     adminSignup:(req,res)=>{
         const {referral}=req.query
         res.render('auth/adminSignup',{err:req.flash('userExist'),referral:referral})
@@ -396,6 +415,33 @@ module.exports={
             res.redirect('/login')
         }catch(error){
             res.redirect('/500')
+        }
+    },
+    getchangepassword:async(req,res)=>{
+        res.render('auth/changepassword',{err:req.flash('existErr')})
+    },
+    changepassword: async (req, res) => {
+        try {
+            const user = req.session.user;
+            const { oldpassword, password, confirmPassword } = req.body;
+            const userExist = await userSchema.findOne({ _id: user });
+    
+            if (userExist) {
+                const isPasswordMatch = await bcrypt.compare(oldpassword, userExist.password);
+    
+                if (isPasswordMatch) {
+                    const hashedNewPassword = await bcrypt.hash(password, 12);
+                    await userSchema.updateOne({ _id: user }, { $set: { password: hashedNewPassword } });
+                    return res.status(200).json({ success: true });
+                } else {
+                    return res.status(401).json({ oldpasswordwrong: true});                    
+                }
+            } else {
+                return res.status(404).json({ success: false, err: 'User not found' });
+            }
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ success: false, err: 'Internal Server Error' });
         }
     }
 }

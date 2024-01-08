@@ -152,8 +152,9 @@ module.exports={
                             let discounted
                             if(cart.coupon){
                                 discounted=await couponHelper.discountPrice(cart.coupon,total)
+
                             }
-                            res.json({success:true,message:'Available',discounted:discounted})
+                            res.json({success:true,message:'Available',discounted:discounted,coupona:coupon[0].minimumAmount})
                         }
                     }
                 }else{

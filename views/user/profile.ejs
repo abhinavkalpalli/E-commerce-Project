@@ -60,11 +60,24 @@
                             <p class="mb-0"><%= user.email %></p>
                             <hr class="color-9">
                             <div class="fs--1 fw-600">
-                                <a id="orders-link" class=" d-block mb-2" href="/user/orders">Orders</a>
-                                <a id="bio-link" class=" d-block mb-2" onclick="editButton()">Edit Bio</a>
-                                <a id="addresses-link" class=" d-block mb-2" href="/user/address">Manage Addresses</a>
-                                <!-- <a id="password-link" class=" d-block mb-2" href="/user/change-password">Change Password</a> -->
-                                <a id="password-link" class=" d-block mb-2" href="/user/wallet">Wallet history</a>
+                                <a id="orders-link" class="d-block mb-2" href="/user/orders">
+                                    <span class="symbol">📦</span> Orders
+                                </a>
+                                
+                                <a id="bio-link" class="d-block mb-2" onclick="editButton()">
+                                    <span class="symbol">✏️</span> Edit Bio
+                                </a>
+                                
+                                <a id="addresses-link" class="d-block mb-2" href="/user/address">
+                                    <span class="symbol">📍</span> Manage Addresses
+                                </a>
+                                
+                                <a id="password-link" class="d-block mb-2" href="/user/wallet">
+                                    <span class="symbol">💰</span> Wallet history
+                                </a>
+                                <a id="password-link" class="d-block mb-2" href="/change-password">
+                                    <span class="symbol">🔐</span> Change Password
+                                </a>
                             </div>                          
                         </div>
                     </div>
@@ -72,7 +85,7 @@
                 <div class="col-md-9 pl-lg-5">
                     
                     
-                    <form class="mt-5 row" onsubmit="return validateForm(event)">
+                    <form class="mt-5 row" action="" method="post" onsubmit="return validateForm(event)">
                         <div class="col-md-6">
                             <label for="firstName"><b>First Name</b></label>
                             <input class="form-control mb-3" id="firstName" type="text" name="firstName" value="<%= user.firstName %>" disabled placeholder="First Name">
@@ -93,7 +106,11 @@
                             <input class="form-control mb-3" id="mobile" type="number" name="mobile" value="<%= user.mobile %>" disabled placeholder="Mobile">
                             <span id="mobileError" class="error"></span>
                         </div>
-                        <div id="save" style="display: none;" onclick="update()" class="mt-4 btn btn-dark rounded-0">Save changes</div>
+                        <button type="submit" id="save" style="display: none;">
+                       
+                            Save changes
+                        
+                        </button>
                     </form>
                     <div class="row mt-3">
                         <a style="box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px; padding: 15px 30px;" class="text-primary fw-700">
@@ -143,11 +160,10 @@
         const firstName = document.getElementById('firstName').value
         const lastName = document.getElementById('lastName').value
         const mobile = document.getElementById('mobile').value
-        const email = document.getElementById('email').value
+        
+        console.log(firstName, mobile, lastName);
 
-        console.log(firstName, mobile, lastName, email);
-
-        const response = await axios.put('/user/edit-profile', { firstName, lastName, mobile, email })
+        const response = await axios.put('/user/edit-profile', { firstName, lastName, mobile })
         if (response.data.success) {
             const inp = document.querySelectorAll('.col-md-9 input')
             const save = document.getElementById('save')
@@ -163,22 +179,22 @@
     }
 
     function validateForm(event) {
-    event.preventDefault(); // Prevent form submission
+    event.preventDefault() // Prevent form submission
 
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const mobile = document.getElementById('mobile').value.trim();
-    const email = document.getElementById('email').value.trim();
+
 
     const firstNameError = document.getElementById('firstNameError');
     const lastNameError = document.getElementById('lastNameError');
     const mobileError = document.getElementById('mobileError');
-    const emailError = document.getElementById('emailError');
+   
 
     firstNameError.textContent = '';
     lastNameError.textContent = '';
     mobileError.textContent = '';
-    emailError.textContent = '';
+    
 
     let isValid = true;
 
@@ -194,6 +210,7 @@
         lastNameError.textContent = 'Last name is required';
         isValid = false;
     } else if (!/^[a-zA-Z]+$/.test(lastName)) {
+        console.log(4);
         lastNameError.textContent = 'Last name should only contain letters';
         isValid = false;
     }
@@ -206,15 +223,13 @@
         isValid = false;
     }
 
-    if (email === '') {
-        emailError.textContent = 'Email is required';
-        isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-        emailError.textContent = 'Invalid email address';
-        isValid = false;
+
+    if (isValid) {
+        
+        update()
     }
 
-    return isValid;
+    return false; // Add this line to explicitly return false if isValid is false
 }
 
 

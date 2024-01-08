@@ -9,7 +9,7 @@ const orderSchema=Schema({
     },
     orderId:{
         type:String,
-        default:'ORD'
+
     },
     products:[{
         productId:{
@@ -29,6 +29,9 @@ const orderSchema=Schema({
     totalPrice:{
         type:Number,
         required:true
+    },
+    discounted:{
+        type:Number
     },
     paymentMethod:{
         type:String,

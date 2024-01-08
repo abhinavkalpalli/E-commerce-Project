@@ -5,15 +5,18 @@ const paginationHelper=require('../helpers/paginationHelper')
 const categorySchema=require('../models/categoryModel')
 const { error } = require('console')
 const offerSchema=require('../models/offerModel')
+const brandSchema=require('../models/brandModel')
 
 module.exports={
 
     getAddProducts:async(req,res)=>{
         try{
             const categories=await categorySchema.find({status:true})
+            const brands=await brandSchema.find({status:true})
             res.render('admin/add-products',{
                 admin:req.session.admin,
                 categories:categories,
+                brands:brands,
                 err:req.flash('err')
             })
         }catch(error){
@@ -40,9 +43,9 @@ module.exports={
             const product=new productSchema({
                 name:req.body.name,
                 description:req.body.description,
-                brand:req.body.brand,
+                brand:req.body.brandId,
                 image:img,
-                category:req.body.id,
+                category:req.body.categoryId,
                 quantity:req.body.quantity,
                 price:req.body.price
             })
@@ -51,13 +54,13 @@ module.exports={
         }catch(error){
             res.redirect('/500')
         }
-    },    
-    getProductslist:async (req,res)=>{
-        try{
-            const { search,sortData,sortOrder }=req.query
-            let page=Number(req.query.page);
-            if(isNaN(page) || page<1){
-                page=1;
+    },
+    getProductsList : async( req, res ) => {
+        try {
+            const { search, sortData, sortOrder } = req.query
+            let page = Number(req.query.page);
+            if (isNaN(page) || page < 1) {
+            page = 1;
             }
             const sort = {}
             const condition = {}
@@ -75,12 +78,13 @@ module.exports={
                     { description : { $regex : search, $options : "i" }},  
                 ]
             }
-            const productsCount=await productSchema.find(condition).productsCount
             const availableOffers = await offerSchema.find({ status : true, expiryDate : { $gte : new Date() }})
-            const products=await productSchema.find(condition).populate('category').populate('offer').sort(sort).skip((page-1)*paginationHelper.PRODUCT_PER_PAGE).limit(paginationHelper.PRODUCT_PER_PAGE)
+            const productsCount = await productSchema.find( condition ).count()
+            const products = await productSchema.find( condition ).populate( 'category' ).populate( 'offer' ).populate('brand')
+            .sort( sort ).skip(( page - 1 ) * paginationHelper.PRODUCT_PER_PAGE ).limit( paginationHelper.PRODUCT_PER_PAGE )
             res.render('admin/products',{
-                admin:req.session.admin,
-                products:products,
+                admin : req.session.admin,
+                products : products,
                 currentPage : page,
                 hasNextPage : page * paginationHelper.PRODUCT_PER_PAGE < productsCount,
                 hasPrevPage : page > 1,
@@ -92,11 +96,12 @@ module.exports={
                 sortOrder : sortOrder,
                 availableOffers : availableOffers
             })
-        }catch(error){
+        } catch ( error ) { 
             res.redirect('/500')
-            console.log(error)
+
         }
-    },
+
+    },    
     deleteProduct:async(req,res)=>{
         try{
             await productSchema.updateOne({_id:req.params.id},{$set:{status:false}})
@@ -109,10 +114,12 @@ module.exports={
         try{
             const product=await productSchema.findOne({_id:req.params.id}).populate('category')
             const category=await categorySchema.find()
+            const brands=await brandSchema.find()
             res.render('admin/edit-products',{
                 product:product,
                 categories:category,
                 admin:req.session.admin,
+                brands:brands,
                 err:req.flash('err')
             })
         }catch(error){
@@ -143,10 +150,11 @@ module.exports={
                 $set:{
                     name:req.body.name,
                     description:req.body.description,
-                    brand:req.body.brand,
+                    brand:req.body.brandId,
+                    image:img,
+                    category:req.body.categoryId,
                     quantity:req.body.quantity,
-                    price:req.body.price,
-                    image:img
+                    price:req.body.price
                 }
             })
             res.redirect('/admin/products')

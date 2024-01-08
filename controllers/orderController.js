@@ -17,6 +17,12 @@ module.exports={
             const { user } = req.session
             const products =  await cartHelper.totalCartPrice( user )
             const { paymentMethod, addressId, walletAmount } = req.body
+            const productCount = await cartHelper.updateQuantity( user )
+            if( productCount){
+                req.session.productCount-=productCount
+                console.log(productCount)
+            res.json({outofStock:true})
+            }else{
             let walletBalance
             if( walletAmount ){
                 walletBalance = Number( walletAmount )
@@ -25,7 +31,7 @@ module.exports={
             const cartProducts = productItems.map( ( items ) => ({
                 productId : items.productId,
                 quantity : items.quantity,
-                price : ( items.totalPrice / items.quantity )
+                price : ( items.totalPrice )
             }))
             const cart = await cartSchema.findOne({ userId : user })
             const totalAmount = await cartHelper.totalCartPrice( user )
@@ -38,6 +44,7 @@ module.exports={
                     }
                 })
             }
+            console.log(discounted)
             const totalPrice = discounted && discounted.discountedTotal ? discounted.discountedTotal : totalAmount[0].total
             let walletUsed, amountPayable
             if( walletAmount ) {
@@ -74,12 +81,10 @@ module.exports={
                 orderStatus : orderStatus,
                 address : addressId,
                 walletUsed : walletUsed,
-                amountPayable : amountPayable
+                amountPayable : amountPayable,
+                discounted:discounted.discountAmount
             })
             const ordered = await order.save()
-
-            
-
             // Decreasing quantity
             for( const items of cartProducts ){
                 const { productId, quantity } = items
@@ -111,6 +116,7 @@ module.exports={
                 const payment = await paymentHelper.razorpayPayment( ordered._id, amountPayable )
                 res.json({ payment : payment , success : false  })
             }
+        }
         } catch ( error ) {
             res.redirect('/500')
         }
@@ -119,7 +125,12 @@ module.exports={
         try{
             const {user}=req.session
             await cartHelper.totalCartPrice(user)
-            const orders=await orderSchema.find({userId:user}).sort({date:-1}).limit(1).populate('products.productId').populate('address')
+            const orders=await orderSchema.find({userId:user}).sort({date:-1}).limit(1) .populate({
+                path: 'products.productId',
+                populate: {
+                  path: 'brand',
+                },
+              }).populate('address')
             
             if(orders.orderStatus=='Pending'){
                 await orderSchema.updateOne({_id:orders._id},{
@@ -129,19 +140,30 @@ module.exports={
                 })
             }
             
-            const lastOrder=await orderSchema.find({userId:user}).sort({date:-1}).limit(1).populate('products.productId').populate('address')
+            const lastOrder=await orderSchema.find({userId:user}).sort({date:-1}).limit(1).populate('address').populate({
+                path: 'products.productId',
+                populate: {
+                  path: 'brand',
+                },
+              })
             res.render('shop/confirm-order',{
                 order:lastOrder,
                 products:lastOrder[0].products,
             })
         }catch(error){
             res.redirect('/500')
+            
         }
     },
     invoice:async(req,res)=>{
         const {user}=req.session
         const {Id}=req.params
-        const lastOrder=await orderSchema.find({_id:Id}).sort({date:-1}).limit(1).populate('products.productId').populate('address')
+        const lastOrder=await orderSchema.find({_id:Id}).sort({date:-1}).limit(1).populate('address').populate('address').populate({
+            path: 'products.productId',
+            populate: {
+              path: 'brand',
+            },
+          })
         res.render('shop/confirm-order',{
             order:lastOrder,
             products:lastOrder[0].products,
@@ -187,7 +209,12 @@ module.exports={
     orderDetailsforAdmin:async(req,res)=>{
         try{
             const {id}=req.params
-            const order=await orderSchema.findOne({_id:id}).populate('products.productId').populate('address')
+            const order=await orderSchema.findOne({_id:id}).populate('products.productId').populate('address').populate('address').populate({
+                path: 'products.productId',
+                populate: {
+                  path: 'brand',
+                },
+              })
             res.render('admin/order-products',{
                 order:order,
                 products:order.products,
@@ -200,7 +227,12 @@ module.exports={
     getOrders:async(req,res)=>{
         try{
             const {user}=req.session
-            const orders=await orderSchema.find({userId:user}).sort({date:-1}).populate('products.productId').populate('address')
+            const orders=await orderSchema.find({userId:user}).sort({date:-1}).populate('address').populate({
+                path: 'products.productId',
+                populate: {
+                  path: 'brand',
+                },
+              })
             console.log(orders)
             const userDetails=await userSchema.findOne({_id:user})
             res.render('user/orders',{
@@ -215,7 +247,12 @@ module.exports={
     userOrderProducts:async(req,res)=>{
         try{
             const {id}=req.params
-            const order=await orderSchema.findOne({_id:id}).populate('products.productId').populate('address')
+            const order=await orderSchema.findOne({_id:id}).populate('address').populate('address').populate({
+                path: 'products.productId',
+                populate: {
+                  path: 'brand',
+                },
+              })
             res.render('user/order-products',{
                 order:order,
                 products:order.products
@@ -370,7 +407,7 @@ module.exports={
                 }
             }else if(from){
                 conditions.date={
-                    $lte:from
+                    $gte:from
                 }
             }else if(to){
                 conditions.date={

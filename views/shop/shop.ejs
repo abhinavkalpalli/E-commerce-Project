@@ -55,16 +55,16 @@
                                     <div class="card-body">
                                         <div class="shop__sidebar__categories">
                                             <ul class="nice-scroll">
-                                                <li><a href="/shop?<% if (brand){%>&&brand=<%= brand %><% } %><% if (search){%>&search=<%= search %><% } %>">All</a></li>
+                                                <li ><a href="/shop?<% if (brand){%>&&brand=<%= brand %><% } %><% if (search){%>&search=<%= search %><% } %>">All</a></li>
                                                 <% for( let item of category ) { %>
-                                                <li><a href="/shop?cat=<%= item._id %><% if (brand){%>&&brand=<%= brand %><% } %><% if (search){%>&search=<%= search %><% } %>"><%= item.category %></a></li>
+                                                <li><a  href="/shop?cat=<%= item._id %><% if (brand){%>&&brand=<%= brand %><% } %><% if (search){%>&search=<%= search %><% } %>"><%= item.category %></a></li>
                                                 <% } %>
                                                 
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div>               
                             <div class="card">
                                 <div class="card-heading">
                                     <a data-toggle="collapse" data-target="#collapseTwo">Branding</a>
@@ -75,10 +75,11 @@
                                             <ul>
                                                 <li><a href="shop?<% if ( cat ) { %>&&cat=<%= cat %><% } %><% if (search){%>&search=<%= search %><% } %>">All</a></li>
                                                 <% for( let item of brands ) { %>
-                                                <li><a href="shop?brand=<%= item %><% if ( cat ) { %>&&cat=<%= cat %><% } %><% if (search){%>&search=<%= search %><% } %>"><%= item %></a></li>
+                                                <li><a href="shop?brand=<%= item._id %><% if ( cat ) { %>&&cat=<%= cat %><% } %><% if (search){%>&search=<%= search %><% } %>"><%= item.brand %></a></li>
                                                 <% } %>
                                             </ul>
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -121,14 +122,22 @@
                                     <i class="fa fa-star-o"></i>
                                     <i class="fa fa-star-o"></i>
                                 </div>
-                                <% if ( product.offer){ var discount = (product.price * product.offer.percentage / 100).toFixed(0)  } else if ( product.category.offer ) {var discount = ( product.price * product.category.offer.percentage / 100 ).toFixed(0) } %>
-                                <% if ( product.offer ) { %>
+                                <% if ( product.offer && !product.category.offer){ var discount = (product.price * product.offer.percentage / 100).toFixed(0)  } else if ( product.category.offer && !product.offer ) {var discount = ( product.price * product.category.offer.percentage / 100 ).toFixed(0) }else if ( product.category.offer && product.offer ){
+                                    if(product.offer.percentage<product.category.offer.percentage){
+                                     {var discount = ( product.price * product.category.offer.percentage / 100 ).toFixed(0) }}
+                                    else{
+                                        var discount = (product.price * product.offer.percentage / 100).toFixed(0)
+                                    }} %>
+                                <% if ( product.offer && !product.category.offer) { %>
                                     <p class="mb-0"><del>₹ <%= product.price %></del></p>
                                     <h5 class="mb-0">₹ <%= product.price - discount %> <span class="badge badge-success"> Save ₹ <%= discount %> </span></h5>
-                                <%} else if ( product.category.offer ) { %>
+                                <%} else if ( product.category.offer && !product.offer ) { %>
                                     <p class="mb-0"><del>₹ <%= product.price %></del></p>
                                     <h5 class="mb-0 fw-700">₹ <%= product.price - discount %> <span class="badge badge-success"> Save ₹ <%= discount %> </span></h5>
-                                 <% } else { %>
+                                <%} else if ( product.category.offer && product.offer ) { %>
+                                    <p class="mb-0"><del>₹ <%= product.price %></del></p>
+                                    <h5 class="mb-0 fw-700">₹ <%= product.price - discount %> <span class="badge badge-success"> Save ₹ <%= discount %> </span></h5>
+                                    <% } else { %>
                                     <h5>₹ <%= product.price %> </h5>
                                 <% } %>
                                 
@@ -165,7 +174,7 @@
                             <% } %>
                             
                             
-                            <!-- <a href="#">21</a> -->
+
                         </div>
                     </div>
                 </div>
@@ -199,6 +208,47 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Get the values of 'cat' and 'brand' from the current URL
+        var urlParams = new URLSearchParams(window.location.search);
+        var catValue = urlParams.get('cat');
+        var brandValue = urlParams.get('brand');
+
+        // Get all the anchor elements inside the categories
+        var categoryLinks = document.querySelectorAll(".shop__sidebar__categories ul li a");
+
+        categoryLinks.forEach(function (link) {
+            var href = link.getAttribute("href");
+
+            // Check if the href attribute of the link matches the 'cat' value from the current URL or 'All' is selected by default
+            if (!catValue || (catValue && href.includes('cat=' + catValue))) {
+                // Change the color to black or any other desired style for category links
+                link.style.color = "black";
+            }
+        });
+
+        // Get all the anchor elements inside the brands
+        var brandLinks = document.querySelectorAll(".shop__sidebar__brand ul li a");
+
+        brandLinks.forEach(function (link) {
+            var href = link.getAttribute("href");
+
+            // Check if the href attribute of the link matches the 'brand' value from the current URL or 'All' is selected by default
+            if (!brandValue || (brandValue && href.includes('brand=' + brandValue))) {
+                // Change the color to black or any other desired style for brand links
+                link.style.color = "black";
+            }
+        });
+    });
+</script>
+
+
+
+
 
 
 <script>

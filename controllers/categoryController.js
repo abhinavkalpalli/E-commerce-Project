@@ -91,11 +91,16 @@ module.exports={
     editCategory:async(req,res)=>{
         try{
             const updatedCategory=req.body.category.toUpperCase()
+            const same=await categorySchema.findOne({category:updatedCategory})
+            if(same){
+                req.flash('categoryExist','Category already exist')
+            }else{
             await categorySchema.updateOne({_id:req.body.categoryId},{
                 $set:{
                     category:updatedCategory
                 }
             })
+        }
             res.redirect('/admin/category')
         }catch(error){
             res.redirect('/500')

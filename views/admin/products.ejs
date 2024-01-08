@@ -127,7 +127,7 @@
                             <button class="toggle-description">Show More</button>
                         </td>
                           
-                        <td> <%= product.brand %> </td>
+                        <td> <%= product.brand.brand %> </td>
                         <td> <%= product.quantity %> </td>
                         <td> <%= product.category.category %> </td>
                         <td> <% if( product.offer ){%><%= product.offer.name %>( <%= product.offer.percentage %>% )<%} else { %>No offers<% }%></td>

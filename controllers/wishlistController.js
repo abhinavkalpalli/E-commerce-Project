@@ -3,7 +3,6 @@ const wishlistSchema=require('../models/wishlistModel')
 module.exports={
     addToWishlist:async(req,res)=>{
         try{
-            console.log('hai')
             const {productId}=req.body
             const {user}=req.session
             const wishlist=await wishlistSchema.findOne({userId:user})
@@ -35,14 +34,20 @@ module.exports={
     getWishlist:async(req,res)=>{
         try{
             const {user}=req.session
-            console.log(user)
-            const list =await wishlistSchema.find({userId:user}).populate('products')
+            const list = await wishlistSchema.find({ userId: user }).populate({
+        path: 'products',
+        populate: [
+            { path: 'offer' },
+            { path: 'category', populate: { path: 'offer' } }
+        ]
+    });
+            console.log(list)
             res.render('user/wishlist',{
                 list:list
             })
         }catch(error){
             res.redirect('/500')
-            console.log(error)
+
         }
     },
     removeItem:async(req,res)=>{

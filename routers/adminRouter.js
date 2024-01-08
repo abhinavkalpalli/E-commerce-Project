@@ -9,7 +9,8 @@ const categoryController = require('../controllers/categoryController');
 const orderController=require('../controllers/orderController');
 const couponController=require('../controllers/couponController');
 const offerController=require('../controllers/offerController');
-
+const brandController=require('../controllers/brandController');
+const bannerController = require( '../controllers/bannerController' );
                             
 const router=express.Router()
 
@@ -24,7 +25,7 @@ router.get('/userList',isAuth.adminAuth,adminController.getUserList)
 router.patch('/block-user/:id',isAuth.adminAuth,adminController.blockUser)
 router.patch('/unblock-user/:id',isAuth.adminAuth,adminController.unBlockUser)
 
-router.get('/products',isAuth.adminAuth,productController.getProductslist)
+router.get('/products',isAuth.adminAuth,productController.getProductsList)
 router.get('/add-products',isAuth.adminAuth,productController.getAddProducts)
 router.post('/add-products',isAuth.adminAuth,upload.array('image',4),productController.addProducts)
 router.get('/delete-product',isAuth.adminAuth,productController.deleteProduct)
@@ -40,7 +41,15 @@ router.get('/edit-category/:id',isAuth.adminAuth,categoryController.getEditCateg
 router.post('/edit-category',isAuth.adminAuth,categoryController.editCategory)
 router.get('/list-category/:id',isAuth.adminAuth,categoryController.listCategory)
 router.get('/unlist-category/:id',isAuth.adminAuth,categoryController.unlistCategory)
+
 router.get('/delete-category/:id',isAuth.adminAuth,categoryController.categorydelete)
+
+router.get('/brand',isAuth.adminAuth,brandController.getBrand)
+router.post('/add-brand',isAuth.adminAuth,brandController.addBrand)
+router.get('/edit-brand/:id',isAuth.adminAuth,brandController.getEditBrand)
+router.post('/edit-brand',isAuth.adminAuth,brandController.editBrand)
+router.get('/list-brand/:id',isAuth.adminAuth,brandController.listBrand)
+router.get('/unlist-brand/:id',isAuth.adminAuth,brandController.unlistBrand)
 
 router.get( '/orders', isAuth.adminAuth, orderController.getAdminOrderlist )
 router.get('/order-products/:id',isAuth.adminAuth,orderController.orderDetailsforAdmin)
@@ -53,6 +62,14 @@ router.get('/edit-coupon/:id',isAuth.adminAuth,couponController.getEditCoupon)
 router.post('/edit-coupon',isAuth.adminAuth,couponController.editCoupon)
 router.patch('/cancel-coupon',isAuth.adminAuth,couponController.cancelCoupon)
 router.patch('/Reactive-coupon',isAuth.adminAuth,couponController.ReactiveCoupon)
+
+router.get( '/banner', isAuth.adminAuth, bannerController.getBannerManagement )
+router.get( '/add-banner', isAuth.adminAuth, bannerController.getAddBanner )
+router.post( '/add-banner', isAuth.adminAuth, upload.single('image'), bannerController.addingBanner )
+router.get( '/edit-banner/:id', isAuth.adminAuth, bannerController.getEditBanner )
+router.post( '/edit-banner', isAuth.adminAuth, upload.single('image'), bannerController.updateBanner )
+router.get( '/delete-banner/:id', isAuth.adminAuth, bannerController.deleteBanner )
+router.get( '/restore-banner/:id', isAuth.adminAuth, bannerController.restoreBanner )
 
 router.get('/offers',isAuth.adminAuth,offerController.getOffers)
 router.get('/add-offer',isAuth.adminAuth,offerController.getAddOffer)

@@ -28,7 +28,24 @@
                                     </div>
                                     <div class="product__cart__item__text">
                                         <h6><%= product.name %></h6>
-                                        <h5 id="price-<%= product._id %>">₹ <%= product.price %></h5>
+                                        <h5 id="price-<%= product._id %>"> <% if ( product.offer && !product.category.offer){ var discount = (product.price * product.offer.percentage / 100).toFixed(0)  } else if ( product.category.offer && !product.offer ) {var discount = ( product.price * product.category.offer.percentage / 100 ).toFixed(0) }else if ( product.category.offer && product.offer ){
+                                            if(product.offer.percentage<product.category.offer.percentage){
+                                             {var discount = ( product.price * product.category.offer.percentage / 100 ).toFixed(0) }}
+                                            else{
+                                                var discount = (product.price * product.offer.percentage / 100).toFixed(0)
+                                            }} %>
+                                        <% if ( product.offer && !product.category.offer) { %>
+                                            <p class="mb-0"><del>₹ <%= product.price %></del></p>
+                                            <h5 class="mb-0">₹ <%= product.price - discount %> <span class="badge badge-success"> Save ₹ <%= discount %> </span></h5>
+                                        <%} else if ( product.category.offer && !product.offer ) { %>
+                                            <p class="mb-0"><del>₹ <%= product.price %></del></p>
+                                            <h5 class="mb-0 fw-700">₹ <%= product.price - discount %> <span class="badge badge-success"> Save ₹ <%= discount %> </span></h5>
+                                        <%} else if ( product.category.offer && product.offer ) { %>
+                                            <p class="mb-0"><del>₹ <%= product.price %></del></p>
+                                            <h5 class="mb-0 fw-700">₹ <%= product.price - discount %> <span class="badge badge-success"> Save ₹ <%= discount %> </span></h5>
+                                            <% } else { %>
+                                            <h5>₹ <%= product.price %> </h5>
+                                        <% } %></h5>
                                     </div>
                                 </td>
 
@@ -56,16 +73,11 @@
             <h3 class="text-center shop-now"><a href="/shop">Shop now</a></h3>
         </div>
         <% } %>
-        <div style="display: none;" class="col-12 mt-5" id="empty-cart">
-            <h1 class="text-center"><b>Wishlist is empty...</b></h1>
-            <br>
-            <h3 class="text-center shop-now"><a href="/shop">Shop now</a></h3>
-        </div>
     </div>
 </section>
 
 <!-- Include SweetAlert CDN -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
@@ -129,18 +141,18 @@
                     listTable.style.display = 'none';
                     emptyList.style.display = 'block';
                 }
-
-                // Display a success message
                 Swal.fire({
                     title: 'Removed',
                     text: 'The item has been removed from your wishlist.',
                     icon: 'success',
                     confirmButtonColor: '#28a745'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
                 });
             } catch (error) {
                 console.error(error);
-
-                // Display an error message
                 Swal.fire({
                     title: 'Error',
                     text: 'An error occurred while removing the item. Please try again.',

@@ -128,17 +128,23 @@ async function submitForm() {
                 data: { addressId, paymentMethod, walletAmount },
                 success: (order) => {
                     if (order.success) {
-                        // Display SweetAlert for successful order placement
                         Swal.fire({
                             icon: 'success',
                             title: 'Order Placed!',
                             text: 'Your order has been successfully placed.',
                         }).then(() => {
-                            // Redirect to the confirmation page
                             location.href = '/confirm-order';
                         });
-                    } else {
-                        // Handle payment (you may need to implement razorpayPayment function)
+                    }else if(order.outofStock){
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Order is not  Placed',
+                            text: 'Out of stock.',
+                        }).then(() => {
+                            location.href = '/cart';
+                        });
+                    } 
+                    else {
                         razorpayPayment(order.payment);
                     }
                 },

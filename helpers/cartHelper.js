@@ -3,28 +3,31 @@ const cartSchema=require('../models/cartModel')
 const mongoose=require('mongoose')
 
 module.exports={
-    updateQuantity:async(user)=>{
-        try{
-            const cartItems=await cartSchema.findOne({userId:user}).populate('items.productId');
-            if(cartItems){
-                for(let items of cartItems.items){
-                    //if cart have more quantity than stock 
-                    if(items && items.productId.quantity>0 && items.productId.quantity<items.quantity){
-                        newQuantity=items.productId.quantity
-                        await cartSchema.updateOne({userId:user,'items.productId':items.productId._id},{$set:{'items.$.quantity':newQuantity}})
-                        //if stock quantity is 0 then item will remove from cart
-                    }else if(items && items.productId.quantity<1){
-                        await cartSchema.updateOne({userId:user,'items.productId':items.productId._id},{$pull:{items:{productId:items.productId._id}}})
-                        return 1
-                    }   
-             }
-                return 0
+  updateQuantity: async (user) => {
+    try {
+        const cartItems = await cartSchema.findOne({ userId: user }).populate('items.productId');
+        if (cartItems) {
+            let removeCount = 0;
+            for (let items of cartItems.items) {
+                if (items && items.productId.quantity > 0 && items.productId.quantity < items.quantity) {
+                    newQuantity = items.productId.quantity;
+                    await cartSchema.updateOne({ userId: user, 'items.productId': items.productId._id }, { $set: { 'items.$.quantity': newQuantity } });
+                }
+                else if (items && items.productId.quantity < 1) {
+                    await cartSchema.updateOne({ userId: user, 'items.productId': items.productId._id }, { $pull: { items: { productId: items.productId._id } } });
+                    removeCount++;
+                }
             }
-
-        }catch(error){
-            console.log(error)
+            return removeCount;
         }
-    },
+        return false;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+},
+
+       
     totalCartPrice : async ( user ) => {
 
         try {
@@ -95,12 +98,17 @@ module.exports={
                 }
               },
               {
-                $addFields: {
-                  appliedOffer: {
-                    $cond: {
-                      if: { $ifNull: ["$productOffer", false] },
-                      then: "$productOffer",
-                      else: "$categoryOffer"
+                $addFields:{
+                  appliedOffer:{
+                    $cond:{
+                      if:{
+                        $gt:[
+                          {$ifNull:["$productOffer.percentage",-Infinity]},
+                          {$ifNull:["$category.categoryOffer.percentage",-Infinity]}
+                        ]
+                      },
+                      then:"$productOffer",
+                      else:"$category.categoryOffer"
                     }
                   }
                 }

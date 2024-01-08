@@ -99,7 +99,7 @@
                                     <img width="100" src="/images/product-images/<%= product.productId.image[0] %>" alt="">
                                 </td>
                             <td><%= product.productId.name %></td>
-                            <td><%= product.productId.brand %></td>
+                            <td><%= product.productId.brand.brand %></td>
                             <td><%= product.price %></td>
                             <td><%= product.quantity %></td>
                             <td><%= total %></td>
@@ -117,6 +117,7 @@
                             <div style="margin-bottom: 20px;" class="orderDetails">
                                 <p>Order Date: <%= moment(order[0].date).format(shortDateFormat) %></p>
                                 <p >OrderId:<%= order[0].orderId %></p>
+                                <p>Discounted:<%= order[0].discounted %></p>
                                 <p>Amount: <%= order[0].totalPrice %></p>
                                 <p>Payment Method: <%= order[0].paymentMethod %></p>
                             </div>
