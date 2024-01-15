@@ -9,6 +9,10 @@ const dashboardHelper=require('../helpers/dashboardHelper')
 module.exports={
     getAdminHome:async(req,res)=>{
         try{
+            const startDate = req.query.startDate ? new Date(req.query.startDate) : new Date() - 14 * 24 * 60 * 60 * 1000;
+            
+            
+            const endDate=req.query.endDate || new Date()
             const today=new Date();
             today.setHours(0,0,0,0)
             const yesterday=new Date(today)
@@ -30,7 +34,7 @@ module.exports={
                 dashboardHelper.totalRevenue(),
                 orderSchema.find({ orderStatus : "Confirmed" }).count(),
                 orderSchema.find({ orderStatus : "Delivered" }).count(),
-                dashboardHelper.dailyChart(),
+                dashboardHelper.dailyChart(startDate,endDate),
                 dashboardHelper.categorySales()
                 
             ]
@@ -71,11 +75,13 @@ module.exports={
                 completedOrders : completedOrders,
                 productCount : productCount,
                 dailyChart : dailyChart,
-                categorySales : categorySales
+                categorySales : categorySales,
+                startDate:startDate,
+                endDate:endDate,
+
             })
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     getUserList : async( req, res ) => {
@@ -140,7 +146,6 @@ module.exports={
             // Redirect to the admin page after blocking
             res.redirect('/admin/userList');
         } catch (error) {
-            console.error(error);
             res.redirect('/500');
         }
     },
@@ -154,8 +159,17 @@ module.exports={
             // Redirect to the admin page after unblocking
             res.redirect('/admin/userList');
         } catch (error) {
-            console.error(error);
             res.redirect('/500');
         }
-    },   
+    },
+    filterchart:async(req,res)=>{
+        try{
+            const {startDate,endDate}=req.body
+            res.redirect(`/admin?startDate=${startDate}&endDate=${endDate}`)
+
+        }catch(error){
+            res.redirect('/500')
+        }
+        
+    }   
 }

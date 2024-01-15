@@ -54,7 +54,7 @@ module.exports={
             }
         }catch(error){
             res.redirect('/500')
-            console.log(error)
+        
         }
     },
     //Userlogout
@@ -114,7 +114,6 @@ module.exports={
             }
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }    
     },
 
@@ -188,7 +187,6 @@ module.exports={
             
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     getAdminLogin:async (req,res)=>{
@@ -220,7 +218,7 @@ module.exports={
     doAdminLogout:(req,res)=>{
         try{
             req.session.admin=null
-            res.redirect('admin-login')
+            res.redirect('/admin-login')
         }catch(error){
             res.redirect('/500')
         }
@@ -300,7 +298,7 @@ module.exports={
             }
         }catch(error){
             res.redirect('/500')
-            console.log(error)
+        
         }    
     },
     adminsignupVerification: async(req,res)=>{
@@ -338,7 +336,6 @@ module.exports={
             }            
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     admingetSignupOtp:(req,res)=>{
@@ -365,7 +362,6 @@ module.exports={
             }
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     forgotPasswordOtpVerification:async(req,res)=>{
@@ -440,7 +436,6 @@ module.exports={
                 return res.status(404).json({ success: false, err: 'User not found' });
             }
         } catch (error) {
-            console.error(error);
             return res.status(500).json({ success: false, err: 'Internal Server Error' });
         }
     }

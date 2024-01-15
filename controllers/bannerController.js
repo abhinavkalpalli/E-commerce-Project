@@ -6,8 +6,8 @@ module.exports = {
 
     getBannerManagement : async ( req, res ) => {
         try {
-            const { search } = req.query
-            let page = Number(req.query.page);
+            const { search, page: rawPage } = req.query
+            let page = parseInt(rawPage,10);
             if (isNaN(page) || page < 1) {
             page = 1;
             }
@@ -29,7 +29,7 @@ module.exports = {
                 admin : req.session.admin,
                 success : req.flash('success'),
                 currentPage : page,
-                hasNextPage : page * paginationHelper.BANNER_PER_PAGE < bannersCount,
+                hasNextPage : (page * paginationHelper.BANNER_PER_PAGE) < bannersCount,
                 hasPrevPage : page > 1,
                 nextPage : page + 1,
                 prevPage : page -1,
@@ -39,7 +39,6 @@ module.exports = {
 
         } catch(error) {
             res.redirect('/500')
-
         }
         
     },
@@ -57,7 +56,9 @@ module.exports = {
                 mainHead : req.body.mainHead,
                 typeHead : req.body.type,
                 description : req.body.description,
-                image : req.file.filename
+                image : req.file.filename,
+                startingDate:req.body.startingDate,
+                expiryDate:req.body.expiryDate
             })
             await banner.save()
             req.flash('success','Banner Added Succussfully...')
@@ -84,34 +85,44 @@ module.exports = {
 
         }
     },
-
     updateBanner : async ( req, res ) => {
         try {
+      
+            
+            if(req.file && req.file.filename){
+              
+                const updatedBanner = {
+                    mainHead : req.body.mainHead,
+                    typeHead : req.body.type,
+                    description : req.body.description,
+                    image : req.file.filename,
+                    startingDate:req.body.startingDate,
+                    expiryDate:req.body.expiryDate
+                }
+                
+                await bannerSchema.updateOne({ _id : req.body.bannerId},{
+                    $set :  updatedBanner 
+                })
+            }else{
+                
             const updatedBanner = {
                 mainHead : req.body.mainHead,
                 typeHead : req.body.type,
-                description : req.body.description
+                description : req.body.description,
+                startingDate:req.body.startingDate,
+                expiryDate:req.body.expiryDate
             }
-            if( req.file ){
-                    if(     
-                        file.mimetype !== 'image/jpg' &&
-                        file.mimetype !== 'image/jpeg' &&
-                        file.mimetype !== 'image/png' &&
-                        file.mimetype !== 'image/gif'
-                        ){
-                            req.flash('err','Check the image type')
-                            return res.redirect(`/admin/edit-banner/${bannerId}`)
-                        }
-                updatedBanner.image = req.file.filename
-            }
+            
             await bannerSchema.updateOne({ _id : req.body.bannerId},{
                 $set :  updatedBanner 
             })
+        }
             req.flash('success','Banner Updated')
             res.redirect( '/admin/banner' )
 
         } catch (error) {
             res.redirect('/500')
+            console.log(error)
 
       }
     },

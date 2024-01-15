@@ -8,9 +8,17 @@ const addressSchema=require('../models/addressModel')
 const cartSchema=require('../models/cartModel')
 const couponHelper=require('../helpers/couponHelper')
 const brandSchema=require('../models/brandModel')
+const bannerSchema = require( '../models/bannerModel' )
 
 module.exports={
     getHome:async(req,res)=>{
+            const banners = await bannerSchema.find({
+                status: true,
+                $and: [
+                    { startingDate: { $lte: new Date() } },
+                    { expiryDate: { $gte: new Date() } }
+                ]
+            });
         const products =await productSchema.find({status:true}).populate({
             path : 'offer',
             match :  { startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() }}
@@ -22,7 +30,7 @@ module.exports={
                 match : { startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() }}
             }
         })
-        res.render('shop/home',{products:products})
+        res.render('shop/home',{products:products,banners : banners})
     
     },
     getShop:async(req,res)=>{
@@ -47,7 +55,7 @@ module.exports={
                 ]
             }
             const productCount=await productSchema.find(condition).count()
-            const products=await productSchema.find(condition) .populate({
+            const products=await productSchema.find(condition).populate({
                 path : 'offer',
                 match :  { startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() }}
             })
@@ -83,7 +91,6 @@ module.exports={
             })
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     getSingleProduct:async(req,res)=>{
@@ -99,12 +106,13 @@ module.exports={
                     path : 'offer',
                     match : { startingDate : { $lte : new Date() }, expiryDate : { $gte : new Date() }}
                 }
-            })  
+            }).populate({
+                path: 'review.userId',
+            });  
             res.render( 'shop/single-product', {
                 product : product,})    
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     getCheckout : async( req, res ) => {
@@ -130,7 +138,6 @@ module.exports={
             })
         } catch ( error ) {
             res.redirect('/500')
-            console.log(error)
 
         }
     },
@@ -158,10 +165,43 @@ module.exports={
                     address:result._id
                 }
             })
-            return res.status(200).json({ success: true });
+            res.redirect('/checkout')
         }catch(error){
             res.redirect('/500')
-            console.log(error)
+        }
+    },
+    review:async(req,res)=>{
+        try{
+            const {rating,comment,productId}=req.body
+            const {user}=req.session
+            const product=await productSchema.findById(productId)
+            const exist=product.review.find((item)=>item.userId==user)
+
+
+            if(exist){
+                res.json({userExist:true,message:'Already reviewed'})
+            }else{
+            const rated={
+                userId:user,
+                rating:rating,
+                comment:comment
+            }
+            
+            product.review.push(rated);
+            await product.save();
+            
+            let totalrating=0
+            for(item of product.review){
+                totalrating+=item.rating
+            }
+            let averagerating=totalrating/product.review.length
+            product.rating=averagerating/5*100
+            await product.save()
+            res.json({success:true,message:'Success'})
+            }
+        }catch(error){
+            console.log(error.message);
+            res.redirect('/500')
         }
     }
 }

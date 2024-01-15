@@ -24,7 +24,15 @@ const bannerSchema = Schema( {
     status : {
         default : true,
         type: Boolean
-    }
+    },
+    startingDate : {
+        type : Date,
+        required : true
+    },
+    expiryDate : {
+        type : Date,
+        required : true
+    },
 
 })
 

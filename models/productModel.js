@@ -40,6 +40,22 @@ const productSchema=Schema({
     offer : {
         type : mongoose.Schema.Types.ObjectId,
         ref : 'offer'
+    },
+    review:[{
+        userId:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:'user'
+        },
+        rating:{
+            type:Number
+        },
+        comment:{
+            type:String
+        }
+        
+    }],
+    rating:{
+        type:Number
     }
 })
 

@@ -29,6 +29,16 @@
                 <input type="text" class="form-control" id="type" name="type" placeholder="Type" required>
               </div>
               <div class="form-group">
+                <label>Starting date</label>
+                <input type="date" class="form-control" id="Starting-date" name="startingDate" placeholder="Starting date" required oninput="validateStartingDate()">
+                <div id="date-validation-message" style="color: red;"></div>
+              </div>
+              <div class="form-group">
+                <label>Expiry date</label>
+                <input type="date" class="form-control" id="expiry-date" name="expiryDate" value="" placeholder="Expiry date" required oninput="validateExpiryDate()">
+                <div id="expiry-validation-message" style="color: red;"></div>
+              </div>
+              <div class="form-group">
                 <label>Image</label>
                 <div class="input-group col-xs-12">
                   <input id="images" type="file" name="image" class="form-control btn btn-primary" placeholder="Upload Image" required>
@@ -53,6 +63,85 @@
 
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
 <script type="module" src="/js/cropper.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+     
+      // Function to check image dimensions
+      function checkImageDimensions(file) {
+          return new Promise((resolve, reject) => {
+              const image = new Image();
+  
+              image.onload = function () {
+                  const width = this.width;
+                  const height = this.height;
+  
+                  // Define your size constraints
+                  const minWidth = 1800;
+                  const minHeight = 700;
+                  const maxWidth = 2000;
+                  const maxHeight = 850;
+  
+                  // Check if the image is within the allowed dimensions
+                  if (width < minWidth || height < minHeight || width > maxWidth || height > maxHeight) {
+                      reject('Image size is not within the allowed dimensions.');
+                  } else {
+                      resolve();
+                  }
+              };
+  
+              image.src = URL.createObjectURL(file);
+          });
+      }
+  
+      // Function to validate starting and expiry dates
+      function validateDates() {
+          const startingDateInput = document.getElementById('Starting-date');
+          const expiryDateInput = document.getElementById('expiry-date');
+          const currentDate = new Date();
+  
+          // Convert input date strings to Date objects
+          const startingDate = new Date(startingDateInput.value);
+          const expiryDate = new Date(expiryDateInput.value);
+  
+          // Check if starting date is today
+          if (startingDate.toDateString() !== currentDate.toDateString()) {
+              throw 'Starting date must be today.';
+          }
+  
+          // Check if expiry date is greater than today
+          if (expiryDate <= currentDate) {
+              throw 'Expiry date must be greater than today.';
+          }
+      }
+  
+      // Hook into your form submission event
+      const productForm = document.getElementById('productForm');
+      productForm.addEventListener('submit', async function (event) {
+          event.preventDefault();
+  
+          const imagesInput = document.getElementById('images');
+          const selectedImage = imagesInput.files[0];
+  
+          try {
+              // Check image dimensions before submitting the form
+              await checkImageDimensions(selectedImage);
+  
+              // Validate starting and expiry dates
+              validateDates();
+  
+              // If dimensions and dates are within limits, submit the form
+              this.submit();
+          } catch (error) {
+              // Display error message
+              const errorContainer = document.getElementById('errorContainer');
+              errorContainer.innerText = error;
+              errorContainer.style.display = 'block';
+          }
+      });
+  });
+  </script>
+  
+  
 
 
 

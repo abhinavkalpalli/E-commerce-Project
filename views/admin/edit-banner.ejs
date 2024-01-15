@@ -1,5 +1,20 @@
 <%- include('../includes/admin/adminHead.ejs') %>
 <%- include('../includes/admin/adminNavbar.ejs') %>
+<style>
+    #image-preview {
+        margin-top: 10px;
+    }
+
+    #image-preview img {
+        max-width: 100px;
+        max-height: 100px;
+        border: 1px solid #ccc; /* Add a border for better visibility */
+        border-radius: 5px; /* Optional: Add border-radius for rounded corners */
+        margin-right: 5px; /* Optional: Add margin for spacing */
+    }
+</style>
+<% var sdate = new Date(banner.startingDate).toISOString().split('T')[0] %>
+<% var edate = new Date(banner.expiryDate).toISOString().split('T')[0] %>
 
 <div class="main-panel">
     <div class="content-wrapper">
@@ -25,15 +40,33 @@
                         <label for="exampleInputEmail3">Type</label>
                         <input type="text" class="form-control" value="<%= banner.typeHead %>" id="type" name="type" placeholder="Type" required>
                     </div>
+                    <div class="form-group">
+                        <label>Starting date</label>
+                        <input type="date" class="form-control" id="Starting-date" value="<%= sdate %>" name="startingDate" placeholder="Starting date" required oninput="validateStartingDate()">
+                        <div id="date-validation-message" style="color: red;"></div>
+                      </div>
+                      <div class="form-group">
+                        <label>Expiry date</label>
+                        <input type="date" class="form-control" id="expiry-date" name="expiryDate" placeholder="Expiry date" value="<%= edate %>" required oninput="validateExpiryDate()">
+                        <div id="expiry-validation-message" style="color: red;"></div>
+                      </div>
                     <input type="hidden" name="bannerId" value="<%= banner._id %>" id="">
                     
 
-                    <div class="form-group">
-                        <label>Image</label>
-                        <div class="input-group col-xs-12">
-                            <input id="images" type="file" name="image" class="form-control btn btn-primary" placeholder="Upload Image" >
-                            <span class="input-group-append"></span>
-                        </div>
+                    <div class="input-group col-xs-12">
+                        <label for="images" class="btn btn-primary">
+                            Choose Image
+                        </label>
+                        <input id="images" type="file" name="image" value="<%= banner.image %>" style="display:none;" onchange="displayImagePreview()">
+                        <span class="input-group-append"></span>
+                    </div>
+                    
+                    <div id="image-preview" style="margin-top: 10px;">
+                        <% if (banner.image) { %>
+                            <img src="/images/product-images/<%= banner.image %>" alt="Current Image" style="max-width: 100px; max-height: 100px;">
+                        <% } else { %>
+                            <img id="placeholder" alt="No Image" style="max-width: 100px; max-height: 100px; display: none;">
+                        <% } %>
                     </div>
 
                     <button type="submit" class="btn btn-primary mr-2">Submit</button>
@@ -47,8 +80,112 @@
 </div>
 </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+     
+    // Function to check image dimensions
+    function checkImageDimensions(file) {
+        return new Promise((resolve, reject) => {
+            const image = new Image();
+
+            image.onload = function () {
+                const width = this.width;
+                const height = this.height;
+
+                // Define your size constraints
+                const minWidth = 1800;
+                const minHeight = 700;
+                const maxWidth = 2000;
+                const maxHeight = 850;
+
+                // Check if the image is within the allowed dimensions
+                if (width < minWidth || height < minHeight || width > maxWidth || height > maxHeight) {
+                    reject('Image size is not within the allowed dimensions.');
+                } else {
+                    resolve();
+                }
+            };
+
+            image.src = URL.createObjectURL(file);
+        });
+    }
+
+    // Function to validate starting and expiry dates
+    function validateDates() {
+        const startingDateInput = document.getElementById('Starting-date');
+        const expiryDateInput = document.getElementById('expiry-date');
+        const currentDate = new Date();
+
+        // Convert input date strings to Date objects
+        const startingDate = new Date(startingDateInput.value);
+        const expiryDate = new Date(expiryDateInput.value);
 
 
+        // Check if expiry date is greater than today
+        if (expiryDate <= currentDate) {
+            throw 'Expiry date must be greater than today.';
+        }
+    }
+
+    // Hook into your form submission event
+    const productForm = document.getElementById('productForm');
+    productForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const imagesInput = document.getElementById('images');
+        const selectedImage = imagesInput.files[0];
+
+        try {
+            
+            if (selectedImage) {
+                // Check image dimensions before submitting the form
+                await checkImageDimensions(selectedImage);
+            }
+            // Validate starting and expiry dates
+            validateDates();
+
+            // If dimensions and dates are within limits, submit the form
+            this.submit();
+        } catch (error) {
+            // Display error message
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerText = error;
+            errorContainer.style.display = 'block';
+        }
+    });
+});
+</script>
+<script>
+    function displayImagePreview() {
+        const fileInput = document.getElementById('images');
+        const imagePreview = document.getElementById('image-preview');
+        const label = document.querySelector('label[for="images"]');
+
+        if (fileInput.files.length > 0) {
+            const filename = fileInput.files[0].name;
+
+            // Update label with selected filename
+            label.textContent = filename;
+
+            // Remove current image preview
+            while (imagePreview.firstChild) {
+                imagePreview.removeChild(imagePreview.firstChild);
+            }
+
+            // Display a preview of the selected image
+            const imgElement = document.createElement('img');
+            imgElement.src = URL.createObjectURL(fileInput.files[0]);
+            imgElement.alt = 'Selected Image';
+            imagePreview.appendChild(imgElement);
+        } else {
+            // If no file is selected, reset the label and remove the preview
+            label.textContent = 'Choose Image';
+            while (imagePreview.firstChild) {
+                imagePreview.removeChild(imagePreview.firstChild);
+            }
+        }
+    }
+</script>
 <!-- Validation -->
 <%- include('../includes/validations/editBannerV.ejs') %>
 

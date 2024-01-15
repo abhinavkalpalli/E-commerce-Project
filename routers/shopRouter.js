@@ -41,6 +41,8 @@ router.post('/add-to-wishlist',isAuth.userAuth,wishlistController.addToWishlist)
 router.get ( '/wishlist', isAuth.userAuth, wishlistController.getWishlist )
 router.put( '/remove-wishlist-item', isAuth.userAuth, wishlistController.removeItem )
 
+router.post('/createProductReview',isAuth.userAuth,shopController.review)
+
 
 
 

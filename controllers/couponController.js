@@ -175,7 +175,6 @@ module.exports={
         
                 res.json({ success: true, message: 'Coupon canceled successfully', });
             } catch (error) {
-                console.error(error);
                 res.status(500).json({ success: false, error: 'Internal Server Error' });
             }
     },

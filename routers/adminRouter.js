@@ -71,6 +71,7 @@ router.post( '/edit-banner', isAuth.adminAuth, upload.single('image'), bannerCon
 router.get( '/delete-banner/:id', isAuth.adminAuth, bannerController.deleteBanner )
 router.get( '/restore-banner/:id', isAuth.adminAuth, bannerController.restoreBanner )
 
+
 router.get('/offers',isAuth.adminAuth,offerController.getOffers)
 router.get('/add-offer',isAuth.adminAuth,offerController.getAddOffer)
 router.post('/add-offer',isAuth.adminAuth,offerController.addOffer)
@@ -84,5 +85,7 @@ router.patch( '/apply-category-offer', isAuth.adminAuth, categoryController.appl
 router.patch( '/remove-category-offer', isAuth.adminAuth, categoryController.removeCategoryOffer )
 
 router.get('/sales-report',isAuth.adminAuth,orderController.getSalesReport)
+
+router.post('/filterchart',isAuth.adminAuth,adminController.filterchart)
 
 module.exports=router

@@ -1,7 +1,38 @@
 <%- include('../includes/admin/adminHead.ejs') %>
 <%- include('../includes/admin/adminNavbar.ejs') %>
 
+<style>
+  /* Add this to your CSS file or style section */
+/* Add this to your CSS file or style section */
+input[type="date"] {
+    width: 150px; /* Adjust the width as needed */
+    padding: 6px;
+    margin: 4px 0;
+    box-sizing: border-box;
+}
 
+button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+/* Optional: Style the button on hover */
+button:hover {
+    background-color: #45a049;
+}
+
+
+</style>
+<% var sdate = new Date(startDate).toISOString().split('T')[0] %>
+<% var edate = new Date(endDate).toISOString().split('T')[0] %>
 
 <% var items = dailyChart %>
 <div class="main-panel">
@@ -113,13 +144,28 @@
         </div>
         <!-- Line chart -->
         <div class="col-lg-6 grid-margin stretch-card">
+       
           <div class="card">
-            <div class="card-body">
-              <h4 class="card-title">Last two week sales</h4>
-              <canvas id="lineChart" style="height:250px"></canvas>
-            </div>
+              <div class="card-body">
+                  <h4 class="card-title">Last two week sales</h4>
+                  <canvas id="lineChart" style="height: 250px;"></canvas>
+              </div>
           </div>
+          <form action="/admin/filterchart" method="POST">
+          <div style="display: flex; flex-direction: column; align-items: flex-start;">
+            <label for="startDate" style="margin-bottom: 5px;">Start Date:</label>
+            <input type="date" id="startDate" name="startDate" value="<%=sdate  %>" style="width: 120px; padding: 4px; margin-bottom: 10px; box-sizing: border-box;">
+    
+            <label for="endDate" style="margin-bottom: 5px;">End Date:</label>
+            <input type="date" id="endDate" name="endDate" value="<%=edate  %>" style="width: 120px; padding: 4px; margin-bottom: 10px; box-sizing: border-box;">
+    
+            <button type="submit" style="background-color: #4CAF50; border: none; color: white; padding: 8px 16px; font-size: 14px; cursor: pointer;">Apply Filter</button>
+
         </div>
+      </form>
+    
+      </div>
+      
 
       </div>
       <div class="row">
@@ -392,7 +438,6 @@
     });
 })(jQuery);
 </script>
-
 
 
 

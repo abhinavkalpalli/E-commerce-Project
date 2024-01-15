@@ -37,7 +37,6 @@ module.exports={
             res.redirect('/user/address')
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     getAddress:async(req,res)=>{
@@ -143,13 +142,11 @@ module.exports={
     getwalletHistory:async(req,res)=>{
         try{
             const {user}=req.session
-            console.log(user)
             const userDetails=await userSchema.findOne({_id:user})
             if (userDetails) {
                 // Sort walletHistory based on the date field in descending order (latest first)
                 userDetails.walletHistory.sort((a, b) => b.date - a.date);
               }
-            console.log(userDetails)
             res.render('user/wallet',{user:userDetails})
 
         }catch(error){

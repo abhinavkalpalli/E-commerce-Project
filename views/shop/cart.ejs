@@ -502,6 +502,8 @@ async function cancelCoupon(event) {
                                     cartTable.style.display = 'none';
                                     emptyCart.style.display = 'block';
                                 }
+                                subtotalCartPrice.innerHTML = `₹ ${response.data.totalPrice[0].total}`
+                                
                             }
 
                             if (response.data.discounted) {

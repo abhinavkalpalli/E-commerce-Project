@@ -49,7 +49,6 @@ module.exports={
         
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     addCategory:async(req,res)=>{
@@ -104,7 +103,6 @@ module.exports={
             res.redirect('/admin/category')
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     listCategory:async(req,res)=>{

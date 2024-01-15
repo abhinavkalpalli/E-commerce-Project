@@ -180,40 +180,63 @@ const paymentMethodAmount=async()=>{
     const result=paymentMethodTotal.length > 0 ?paymentMethodTotal:0
     return result
 }
-const dailyChart=async()=>{
-    const dailyOrders=await orderSchema.aggregate([
-        {
-            $match:{
-                orderStatus:{
-                    $nin:["Pending","Returned"]
+    const dailyChart = async (startDate, endDate) => {
+       
+
+        // If endDate is not provided, set it to today
+       
+
+        const matchStage = {
+            $match: {
+                orderStatus: {
+                    $nin: ["Pending", "Returned"]
+                },
+                date: {
+                    $gte: new Date(startDate),
+                    $lte: new Date(endDate)
                 }
             }
-        },
-        {
-            $group:{
-                _id:{
-                    $dateToString:{
-                        format:"%Y-%m-%d",
-                        date:"$date"
+        };
+
+        // Add other stages as needed for your aggregation pipeline
+        const groupStage = {
+            $group: {
+                _id: {
+                    $dateToString: {
+                        format: "%Y-%m-%d",
+                        date: "$date"
                     }
                 },
-                dailyrevenue:{
-                    $sum:"$totalPrice"
+                dailyrevenue: {
+                    $sum: "$totalPrice"
                 }
             }
-        },
-        {
-            $sort:{
-                _id:1
+        };
+
+        const sortStage = {
+            $sort: {
+                _id: 1
             }
-        },
-        {
-            $limit:14
-        }
-    ])
-    const result=dailyOrders || 0
-    return result
-}
+        };
+
+        const limitStage = {
+            $limit: 14
+        };
+
+        // Example usage of matchStage, groupStage, sortStage, and limitStage
+        const dailyOrders = await orderSchema.aggregate([
+            matchStage,
+            groupStage,
+            sortStage,
+            limitStage
+            // Add other stages as needed
+        ]);
+
+        const result = dailyOrders || 0;
+        return result;
+    }
+
+
 const categorySales=async()=>{
     const catSales=await orderSchema.aggregate([
         {

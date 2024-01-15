@@ -49,7 +49,6 @@ module.exports={
         
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     addBrand:async(req,res)=>{
@@ -98,7 +97,6 @@ module.exports={
         res.redirect('/admin/brand')
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     listBrand:async(req,res)=>{

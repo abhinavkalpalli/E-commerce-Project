@@ -14,13 +14,13 @@ module.exports={
 
     placeOrder : async ( req, res ) => {
         try {
+          
             const { user } = req.session
             const products =  await cartHelper.totalCartPrice( user )
             const { paymentMethod, addressId, walletAmount } = req.body
             const productCount = await cartHelper.updateQuantity( user )
             if( productCount){
                 req.session.productCount-=productCount
-                console.log(productCount)
             res.json({outofStock:true})
             }else{
             let walletBalance
@@ -35,7 +35,7 @@ module.exports={
             }))
             const cart = await cartSchema.findOne({ userId : user })
             const totalAmount = await cartHelper.totalCartPrice( user )
-            let discounted
+            let discounted=0
             if( cart && cart.coupon && totalAmount && totalAmount.length > 0 ) {
                 discounted = await couponHelper.discountPrice( cart.coupon, totalAmount[0].total )
                 await couponSchema.updateOne({ _id : cart.coupon},{
@@ -44,7 +44,10 @@ module.exports={
                     }
                 })
             }
-            console.log(discounted)
+            let discountAmount=0
+            if(discounted.discountAmount>0){
+             discountAmount=discounted.discountAmount
+            }
             const totalPrice = discounted && discounted.discountedTotal ? discounted.discountedTotal : totalAmount[0].total
             let walletUsed, amountPayable
             if( walletAmount ) {
@@ -82,7 +85,7 @@ module.exports={
                 address : addressId,
                 walletUsed : walletUsed,
                 amountPayable : amountPayable,
-                discounted:discounted.discountAmount
+                discounted:discountAmount
             })
             const ordered = await order.save()
             // Decreasing quantity
@@ -233,7 +236,6 @@ module.exports={
                   path: 'brand',
                 },
               })
-            console.log(orders)
             const userDetails=await userSchema.findOne({_id:user})
             res.render('user/orders',{
                 orders:orders,
@@ -259,7 +261,6 @@ module.exports={
             })
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     userCancelOrder:async(req,res)=>{
@@ -267,7 +268,6 @@ module.exports={
             const {orderId,status}=req.body
             const {user}=req.session
             const order=await orderSchema.findOne({_id:orderId})
-            console.log(order)
             for(let products of order.products){
                 await productSchema.updateOne({_id:products.productId},{$inc:{quantity:products.quantity}})
             }
@@ -292,7 +292,6 @@ module.exports={
             res.status(200).json({success:true,status:newStatus.orderStatus})
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     changeOrderStatus:async(req,res)=>{
@@ -330,7 +329,6 @@ module.exports={
         
             const orders=await orderSchema.findOne({_id:order.receipt})
           
-            console.log(`order is ${orders}`)
             if(orders.walletUsed){
                 await userSchema.updateOne({_id:user},{
                     $inc:{

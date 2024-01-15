@@ -1,7 +1,77 @@
 <%- include('../includes/userHead.ejs') %>
 <%- include('../includes/userNavbar.ejs') %>
 
+<!-- Hero Section Begin -->
+<section class="hero">
+    <div class="hero__slider owl-carousel">
+        <% for(let banner of banners) { %>
+        <div class="hero__items set-bg" data-setbg="/images/product-images/<%= banner.image %>">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-5 col-lg-7 col-md-8">
+                        <div class="hero__text">
+                            <h6><%= banner.typeHead %></h6>
+                            <h2><%= banner.mainHead %></h2>
+                            <p><%= banner.description %></p>
+                            <a href="/shop" class="primary-btn">Shop now <span class="arrow_right"></span></a>
+                            <div class="hero__social">
+                                <a href="#"><i class="fa fa-facebook"></i></a>
+                                <a href="#"><i class="fa fa-twitter"></i></a>
+                                <a href="#"><i class="fa fa-pinterest"></i></a>
+                                <a href="#"><i class="fa fa-instagram"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } %>
+    </div>
+</section>
+<!-- Hero Section End -->
 
+
+<!-- Banner Section Begin -->
+<section class="banner spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-7 offset-lg-4">
+                <div class="banner__item">
+                    <div class="banner__item__pic">
+                        <img src="/user/img/banner/banner-1.jpg" alt="">
+                    </div>
+                    <div class="banner__item__text">
+                        <h2>Clothing Collections 2030</h2>
+                        <a href="/shop">Shop now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="banner__item banner__item--middle">
+                    <div class="banner__item__pic">
+                        <img src="/user/img/banner/banner-2.jpg" alt="">
+                    </div>
+                    <div class="banner__item__text">
+                        <h2>Accessories</h2>
+                        <a href="/shop">Shop now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="banner__item banner__item--last">
+                    <div class="banner__item__pic">
+                        <img src="/user/img/banner/banner-3.jpg" alt="">
+                    </div>
+                    <div class="banner__item__text">
+                        <h2>Shoes Spring 2030</h2>
+                        <a href="/shop">Shop now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Banner Section End -->
 
 
 <!-- Product Section Begin -->
@@ -39,11 +109,13 @@
                                 <a class="add-cart text-danger">Out of Stock</a>
                         <% } %>
                         <div class="rating">
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
+                            <% for (let i = 1; i <= 5; i++) { %>
+                                <% if (i <= (product.rating / 20)) { %>
+                                    <i class="fa fa-star text-warning"></i>
+                                <% } else { %>
+                                    <i class="fa fa-star-o"></i>
+                                <% } %>
+                            <% } %>
                         </div>
                         <% if ( product.offer && !product.category.offer){ var discount = (product.price * product.offer.percentage / 100).toFixed(0)  } else if ( product.category.offer && !product.offer ) {var discount = ( product.price * product.category.offer.percentage / 100 ).toFixed(0) }else if ( product.category.offer && product.offer ){
                             if(product.offer.percentage<product.category.offer.percentage){

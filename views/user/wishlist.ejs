@@ -131,17 +131,7 @@
                     // Remove the wishlist item row
                     const wrow = document.getElementById(`wishlist-row-${productId}`);
                     wrow.style.display = 'none';
-                }
-
-                if (response.data.listDelete) {
-                    // Handle the case when the wishlist is empty
-                    const listTable = document.getElementById('cart-table');
-                    const emptyList = document.getElementById('empty-cart');
-
-                    listTable.style.display = 'none';
-                    emptyList.style.display = 'block';
-                }
-                Swal.fire({
+                    Swal.fire({
                     title: 'Removed',
                     text: 'The item has been removed from your wishlist.',
                     icon: 'success',
@@ -151,6 +141,9 @@
                         location.reload();
                     }
                 });
+                }
+
+               
             } catch (error) {
                 console.error(error);
                 Swal.fire({

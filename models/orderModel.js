@@ -31,7 +31,8 @@ const orderSchema=Schema({
         required:true
     },
     discounted:{
-        type:Number
+        type:Number,
+        default:0
     },
     paymentMethod:{
         type:String,

@@ -28,7 +28,6 @@ module.exports={
             }
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     },
     getWishlist:async(req,res)=>{
@@ -60,14 +59,13 @@ module.exports={
                 }
             })
             wishlist=await wishlistSchema.findOne({userId:user})
-            if(wishlist.products.length==0){
+            if(wishlist.products.length===0){
                 await wishlistSchema.deleteOne({userId:user})
-                return res.json({success:true,listDelete:true})
+                return res.json({success:true})
             }
             
         }catch(error){
             res.redirect('/500')
-            console.log(error)
         }
     }
     
