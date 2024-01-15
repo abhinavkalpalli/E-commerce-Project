@@ -1,16 +1,17 @@
 const express=require('express')
-const authController=require('../controllers/authController');
 const isAuth = require('../middleware/isAuth');                     
-const adminController = require('../controllers/adminController');
-const productController=require('../controllers/productController')
 const multer=require('multer')
 const upload=require('../middleware/multer');
+//Getting controllers
 const categoryController = require('../controllers/categoryController');
 const orderController=require('../controllers/orderController');
 const couponController=require('../controllers/couponController');
 const offerController=require('../controllers/offerController');
 const brandController=require('../controllers/brandController');
 const bannerController = require( '../controllers/bannerController' );
+const authController=require('../controllers/authController');
+const adminController = require('../controllers/adminController');
+const productController=require('../controllers/productController')
                             
 const router=express.Router()
 
@@ -87,5 +88,7 @@ router.patch( '/remove-category-offer', isAuth.adminAuth, categoryController.rem
 router.get('/sales-report',isAuth.adminAuth,orderController.getSalesReport)
 
 router.post('/filterchart',isAuth.adminAuth,adminController.filterchart)
+
+router.get('/ideas',isAuth.adminAuth,adminController.ideas)
 
 module.exports=router

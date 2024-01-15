@@ -3,6 +3,7 @@ const paginationHelper=require('../helpers/paginationHelper')
 
 
 module.exports={
+    //brands in adminpage
     getBrand:async (req,res)=>{
         try{
             const { search, sortData, sortOrder } = req.query
@@ -51,6 +52,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Adding brand
     addBrand:async(req,res)=>{
         try{
             const br=req.body.brand.toUpperCase()
@@ -68,6 +70,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //editing brand
     getEditBrand:async(req,res)=>{
         try{
             const brand = await brandSchema.findOne({_id:req.params.id})
@@ -99,6 +102,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    
     listBrand:async(req,res)=>{
         try{
             await brandSchema.updateOne({_id:req.params.id},{$set:{status:true}})
@@ -107,6 +111,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //soft delete of brand
     unlistBrand:async(req,res)=>{
         try{
             await brandSchema.updateOne({_id:req.params.id},{$set:{status:false}})

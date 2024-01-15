@@ -1,6 +1,7 @@
 const wishlistSchema=require('../models/wishlistModel')
 
 module.exports={
+    //Add items to wiishlist
     addToWishlist:async(req,res)=>{
         try{
             const {productId}=req.body
@@ -30,6 +31,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Getting wishlist
     getWishlist:async(req,res)=>{
         try{
             const {user}=req.session
@@ -40,7 +42,6 @@ module.exports={
             { path: 'category', populate: { path: 'offer' } }
         ]
     });
-            console.log(list)
             res.render('user/wishlist',{
                 list:list
             })
@@ -49,6 +50,7 @@ module.exports={
 
         }
     },
+    //Remove item from wishlist
     removeItem:async(req,res)=>{
         try{
             const {productId}=req.body

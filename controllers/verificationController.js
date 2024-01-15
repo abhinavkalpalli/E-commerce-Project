@@ -10,7 +10,7 @@ const transporter=nodemailer.createTransport({
         pass:process.env.PASS
     }
 });
-
+//Fucntion for generating random otp
 function generateOtp(){
     try{
         const otp=otpGenerator.generate(6,{

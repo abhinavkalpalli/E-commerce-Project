@@ -3,6 +3,7 @@ const paginationHelper=require('../helpers/paginationHelper')
 const offerSchema=require('../models/offerModel')
 
 module.exports={
+    //Get the category
     getCategory:async (req,res)=>{
         try{
             const { search, sortData, sortOrder } = req.query
@@ -51,6 +52,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Adding category
     addCategory:async(req,res)=>{
         try{
             const cat=req.body.category.toUpperCase()
@@ -68,6 +70,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Editing Category 
     getEditCategory:async(req,res)=>{
         try{
             const category = await categorySchema.findOne({_id:req.params.id})
@@ -113,6 +116,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //soft delete the category
     unlistCategory:async(req,res)=>{
         try{
             await categorySchema.updateOne({_id:req.params.id},{$set:{status:false}})
@@ -121,6 +125,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //applying category offer
     applyCategoryOffer:async(req,res)=>{
         try{
             const {offerId,categoryId}=req.body
@@ -134,6 +139,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //cancel the categry offer
     removeCategoryOffer:async(req,res)=>{
         try{
             const {categoryId}=req.body

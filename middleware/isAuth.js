@@ -11,7 +11,7 @@ module.exports = {
     adminAuth : ( req, res, next ) => {
 
         if( !req.session.admin ) {
-           return res.redirect( '/admin/login')
+           return res.redirect( '/admin/admin-login')
         }
 
         next()

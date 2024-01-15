@@ -192,9 +192,9 @@
        
         try {
             const response = await axios.patch('/admin/cancel-offer',{ offerId })
-            console.log(response);
+          
             if ( response.data.cancelled ) {
-                console.log();
+               
                 status.innerHTML="Cancelled"
                 cancelbtn.innerHTML = 'Active'
                 cancelbtn.style.color = '#00FF00' 

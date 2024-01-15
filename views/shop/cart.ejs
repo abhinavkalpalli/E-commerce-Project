@@ -133,7 +133,7 @@
                                 <form id="coupon-form">
                                     <input id="coupon-input" type="text" placeholder="Coupon code">
                                     <% if (discounted) { %>
-                                        <button onclick="cancelCoupon(event)">Cancel</button>
+                                        <button onclick="cancelCoupon(event)" id="cancel">Cancel</button>
                                     <% }else{ %>
                                     <button onclick="applyCoupon(event)">Apply</button>
                                     <% } %>
@@ -276,6 +276,8 @@ async function applyCoupon(event) {
     if (response.data.success) {
         const couponMessage = document.getElementById('coupon-message');
         couponMessage.innerHTML = '<p>Coupon applied</p>';
+
+        
         Swal.fire({
             icon: 'success',
             title: 'Coupon Applied',
@@ -291,6 +293,8 @@ async function applyCoupon(event) {
         if (response.data.discounted) {
             totalCartPrice.innerHTML = `₹ ${response.data.discounted.discountedTotal}`;
             couponDiscount.innerHTML = `-₹ ${response.data.discounted.discountAmount}`;
+            
+        
         }
         if(response.data.coupona){
             couponminimum.innerHTML=`${response.data.coupon}`
@@ -299,7 +303,7 @@ async function applyCoupon(event) {
       
         
     } else {
-        console.log(response.data.message);
+        
         const couponMessage = document.getElementById('coupon-message');
         couponMessage.innerHTML = `<p class="text-danger">${response.data.message}</p>`;
     }
@@ -341,11 +345,7 @@ async function cancelCoupon(event) {
     const cartTable = document.getElementById('cart-table')
     const emptyCart = document.getElementById('empty-cart')
     const stockOut = document.getElementById('stockOut')
-    if(stockOut){
-        console.log('yes');
-    } else {
-        console.log('no');
-    }
+    
 
     async function addToCart( productId ){
 
@@ -362,7 +362,17 @@ async function cancelCoupon(event) {
             const currentTotal = document.getElementById(`total-${productId}`).innerHTML.split(" ")
             const price = Number(priceTag[1])
             const totalNumber = Number(currentTotal [1])
-            
+            const cancel=document.getElementById('cancel')
+            if(cancel){
+                Swal.fire({
+            icon: 'Warning',
+            title: 'Warning',
+            text: 'If you want to icrease or decrease the quantity or remove an item, Please cancel the applied coupon',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
+            });
+            }
+            else{
             const total = document.getElementById(`total-${productId}`)
             const response = await axios.post('/add-to-cart',{productId})
             if( !response.data.login ){
@@ -387,8 +397,7 @@ async function cancelCoupon(event) {
                 });
             }
             if( response.data.success === true){
-                console.log(response.data.totalPrice);
-                console.log(response.data.discounted);
+                
                 const currentQty = parseInt(qty.val())
                 const updatedQty = currentQty + 1
                 const totalPrice = updatedQty * price
@@ -402,8 +411,9 @@ async function cancelCoupon(event) {
                 } else {
                     totalCartPrice.innerHTML = `₹ ${response.data.totalPrice[0].total}`
                 }
-                qty.val(updatedQty)
+                
             }  
+        }
             
         } catch (error) {
             console.log(error.status);
@@ -426,6 +436,18 @@ async function cancelCoupon(event) {
                     const price = Number(priceTag[1])
                     const totalNumber = Number(currentTotal [1])
                     const currentQty = parseInt(qty.val())
+                    const cancel=document.getElementById('cancel')
+                    if(cancel){
+                        Swal.fire({
+                    icon: 'Warning',
+                    title: 'Warning',
+                    text: 'If you want to icrease or decrease the quantity or remove an item, Please cancel the applied coupon',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                    });
+                    }
+                    else{
+                    
                     const response = await axios.post('/decrease-cart',{productId})
                     if( subtotalCartPrice <= 0 ) {
                         window.location = '/cart'
@@ -452,7 +474,7 @@ async function cancelCoupon(event) {
                         } else {
                             console.log(response.data);
                         }
-                    
+                    }
                 } catch (error) {
                     console.log(error.message);
                 }
@@ -461,6 +483,16 @@ async function cancelCoupon(event) {
             
             async function RemoveCart(itemId) {
                 event.preventDefault();
+                const cancel=document.getElementById('cancel')
+                if(cancel){
+                    Swal.fire({
+                icon: 'Warning',
+                title: 'Warning',
+                text: 'If you want to icrease or decrease the quantity or remove an item, Please cancel the applied coupon',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+                });
+                }else{
                 Swal.fire({
                     title: 'Remove Item',
                     text: 'Are you sure you want to remove this item from your cart?',
@@ -512,6 +544,7 @@ async function cancelCoupon(event) {
                             } else {
                                 totalCartPrice.innerHTML = `₹ ${response.data.totalPrice[0].total}`;
                             }
+                            
                             // Display a success message
                             Swal.fire({
                                 title: 'Removed',
@@ -519,6 +552,7 @@ async function cancelCoupon(event) {
                                 icon: 'success',
                                 confirmButtonColor: '#28a745'
                             });
+                            
                             
                         } catch (error) {
                             console.error(error);
@@ -530,8 +564,10 @@ async function cancelCoupon(event) {
                             });
                         }
                     }
+                    
                 });
-}
+            }
+        }
 
 
             $(document).ready(function() {  

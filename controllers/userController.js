@@ -4,6 +4,7 @@ const crypto=require('crypto')
 const paymentHelper=require('../helpers/paymentHelper')
 
 module.exports={
+    //User profile
     getUserProfile:async(req,res)=>{
         try{
             
@@ -16,6 +17,7 @@ module.exports={
     getAddAddress:(req,res)=>{
         res.render('user/add-address')
     },
+    //Adding address
     addAddress:async(req,res)=>{
         try{
             const address=new addressSchema({
@@ -55,6 +57,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Removing address
     removeAddress:async(req,res)=>{
         try{
             const addressId=req.params.id
@@ -95,6 +98,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Edit profile
     editProfile:async(req,res)=>{
         try{
             await userSchema.updateOne({_id:req.session.user},{
@@ -108,17 +112,6 @@ module.exports={
             res.status(200).json({success:true})
         }catch(error){
             res.redirect('/500')
-        }
-    },
-    addToWallet : async ( req, res ) => {
-        try {
-            const { amount } = req.body
-            const  Id = crypto.randomBytes(8).toString('hex')
-            const payment = await paymentHelper.razorpayPayment( Id, amount )
-            res.json({ payment : payment , success : true  })
-        } catch (error) {
-            res.redirect('/500')
-
         }
     },
     razorpayVerifyPayment : async( req, res ) => {
@@ -138,7 +131,7 @@ module.exports={
         })
         res.json({ paid : true })
     },
-    
+    //Wallet history
     getwalletHistory:async(req,res)=>{
         try{
             const {user}=req.session

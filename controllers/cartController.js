@@ -4,6 +4,7 @@ const productSchema=require('../models/productModel')
 const couponSchema=require('../models/couponModel')
 const couponHelper=require('../helpers/couponHelper')
 module.exports={
+    //cart
     getCart : async( req, res ) => {
         try {
             const { user } = req.session;   
@@ -29,7 +30,7 @@ module.exports={
             const totalPrice = await cartHelper.totalCartPrice( user )
 
             if( updatedCart && updatedCart.items > 0 ){
-                console.log(updatedCart.items.length);
+                
                 req.session.productCount = updatedCart.items.length
                 updatedCart.items.forEach(( items ) => {
                 
@@ -61,6 +62,7 @@ module.exports={
 
         }
     },
+    //Adding items to cart
     addToCart : async ( req, res ) => {
         try {
             
@@ -145,10 +147,12 @@ module.exports={
 
         }
     },
+    //decreasing the quantity of products in cart
     deCart:async(req,res)=>{
             try{
                 const {user}=req.session
                 const {productId}=req.body
+                //matching
                 const updatedCart=await cartSchema.findOneAndUpdate({
                     userId:user,
                     'items':{$elemMatch:{productId:productId,quantity:{$gte:2}}}
@@ -157,6 +161,7 @@ module.exports={
                 {new:true}
                 );
                 if( updatedCart) {
+                    //Changing the cart price
                     const totalPrice = await cartHelper.totalCartPrice( user )
                     const cart = await cartSchema.findOne({ userId : user})
                     let discounted
@@ -171,6 +176,7 @@ module.exports={
                 res.redirect('/500')
         }
     },
+    //removing items from cart
     removeCartItem:async(req,res)=>{
         try{
             
@@ -181,6 +187,7 @@ module.exports={
             if(req.session.productCount>0){
             req.session.productCount--
             }
+            //if no elements in cart delete the cart
             if(req.session.productCount===0){
                 await cartSchema.deleteOne({userId:user})
             }

@@ -1,7 +1,7 @@
 const offerSchema=require('../models/offerModel')
 
 module.exports={
-
+    //Getting offers
     getOffers:async(req,res)=>{
         try{
             const offers=await offerSchema.find()
@@ -24,6 +24,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Adding offer
     addOffer:async(req,res)=>{
         try{
             const {search,page}=req.query
@@ -61,6 +62,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Editing offer
     editOffer:async(req,res)=>{
         try{
             const {id,name,startingDate,expiryDate,percentage}=req.body
@@ -76,6 +78,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Cancel offer
     cancelOffer:async(req,res)=>{
         try{
            const {offerId}=req.body
@@ -88,6 +91,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Activate offer
     activateOffer:async(req,res)=>{
         try{
             const {offerId}=req.body

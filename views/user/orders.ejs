@@ -2,6 +2,9 @@
 <%- include('../includes/userNavbar.ejs') %>
 
 <style>
+  .shop-now a:hover {
+        color: #111;
+    }
     .main-div{
         display: flex;
         justify-content: center;
@@ -49,7 +52,7 @@
         <div class="row justify-content-center">
             <div class="col-lg-3">
                 
-            
+            <% if(orders && orders.length>0){  %>
             <div class="">
                 <div class="table">
                     <table>
@@ -96,7 +99,13 @@
                         </tbody>
                     </table>
                 </div>
-
+                <% }else{ %>
+                  <div class="col-12 mt-5">
+                    <h2 class="text-center"><b>There is no Orders</b></h2>
+                    <br>
+                    <h3 class="text-center shop-now"><a href="/shop">Shop now</a></h3>
+                </div>
+                  <% } %>
                 </div>
             </div>
         </div>
@@ -121,7 +130,7 @@
     });
 
     if (confirmed) {
-      console.log(orderId);
+      
       const status = 'Cancelled';
       const cancel = await axios.patch('/user/cancel-order', { orderId, status });
 

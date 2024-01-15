@@ -51,11 +51,8 @@ app.use(express.static(path.join(__dirname,'public')));
 //setting local variable
 app.use((req,res,next)=>{
     res.locals.userLoggedin=req.session.user
-    if(req.session.productCount){
         res.locals.productCount=req.session.productCount
-    }else{
-        res.locals.productCount=0
-    }
+   
     next()
 })
 

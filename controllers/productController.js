@@ -23,6 +23,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Adding products 
     addProducts:async(req,res)=>{
         try{
             for(let file of req.files){
@@ -55,6 +56,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Getting the current products
     getProductsList : async( req, res ) => {
         try {
             const { search, sortData, sortOrder } = req.query
@@ -101,7 +103,8 @@ module.exports={
 
         }
 
-    },    
+    }, 
+    //soft delete of products   
     deleteProduct:async(req,res)=>{
         try{
             await productSchema.updateOne({_id:req.params.id},{$set:{status:false}})
@@ -126,6 +129,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+//Editing products
     editProduct:async(req,res)=>{
         try{
             const existingProduct=await productSchema.findById(req.body.productId)
@@ -162,6 +166,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Deleting images of products
     deleteImage:async(req,res)=>{
         try{
             const id=req.query.id
@@ -177,14 +182,7 @@ module.exports={
             res.redirect('/500')
         }
     },
-    deleteProduct:async(req,res)=>{
-        try{
-            await productSchema.updateOne({_id:req.params.id},{$set:{status:false}})
-            res.redirect('/admin/products')
-        }catch(error){
-            res.redirect('/500')
-        }
-    },
+    //restore the product
     restoreProduct:async(req,res)=>{
         try{
             await productSchema.updateOne({_id:req.params.id},{
@@ -197,6 +195,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Applying the product offer
     applyProductOffer:async(req,res)=>{
         try{
             const {offerId,productId}=req.body
@@ -208,6 +207,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Remove the product offer
     removeProductOffer:async(req,res)=>{
         try{
             const {productId}=req.body

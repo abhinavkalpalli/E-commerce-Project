@@ -11,7 +11,7 @@ const couponHelper=require('../helpers/couponHelper')
 const couponSchema=require('../models/couponModel')
 
 module.exports={
-
+    //placing order
     placeOrder : async ( req, res ) => {
         try {
           
@@ -20,6 +20,7 @@ module.exports={
             const { paymentMethod, addressId, walletAmount } = req.body
             const productCount = await cartHelper.updateQuantity( user )
             if( productCount){
+                //If product is not available when we are at checkout
                 req.session.productCount-=productCount
             res.json({outofStock:true})
             }else{
@@ -28,6 +29,7 @@ module.exports={
                 walletBalance = Number( walletAmount )
             }
             const productItems = products[0].items
+            //Inserting individual product details
             const cartProducts = productItems.map( ( items ) => ({
                 productId : items.productId,
                 quantity : items.quantity,
@@ -124,6 +126,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Invoice
     getConfirmOrder:async(req,res)=>{
         try{
             const {user}=req.session
@@ -172,6 +175,7 @@ module.exports={
             products:lastOrder[0].products,
         })
     },
+    //Orderlist in admin dashboard
     getAdminOrderlist:async(req,res)=>{
         try{
             const {sortData,sortOrder}=req.query
@@ -227,6 +231,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Getting the orders of users
     getOrders:async(req,res)=>{
         try{
             const {user}=req.session
@@ -246,6 +251,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Ordered products by user
     userOrderProducts:async(req,res)=>{
         try{
             const {id}=req.params
@@ -263,6 +269,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Cancelling the order
     userCancelOrder:async(req,res)=>{
         try{
             const {orderId,status}=req.body
@@ -294,6 +301,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Changing order status in admin side
     changeOrderStatus:async(req,res)=>{
         try{
             const {status,orderId}=req.body
@@ -318,6 +326,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Razorpay verification
     razorpayVerifyPayment:async(req,res)=>{
         const {response,order}=req.body
         const {user}=req.session
@@ -356,6 +365,7 @@ module.exports={
     console.log(orderId)
     res.render('shop/return',{orderId:orderId})
    },
+   //Return the order
    returnOrder:async(req,res)=>{
     const orderId=req.query.orderId
     const {user}=req.session
@@ -391,6 +401,7 @@ module.exports={
     res.redirect('/user/orders')
     
    },
+   //Sales report
    getSalesReport:async(req,res)=>{
         const {from,to,seeAll,sortData,sortOrder}=req.query
         let page = Number(req.query.page);

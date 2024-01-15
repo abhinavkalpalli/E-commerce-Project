@@ -4,6 +4,7 @@ const couponHelper=require('../helpers/couponHelper')
 
 
 module.exports={
+    //get the available coupons
     getCoupons:async(req,res)=>{
         try{
             const {search,sortData,sortOrder}=req.query
@@ -35,12 +36,14 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //page for adding coupon
     getAddCoupon:(req,res)=>{
         res.render('admin/add-coupon',{
         admin:true,
         err:req.flash('err')
         })
     },
+    //Adding coupon
     addCoupon:async(req,res)=>{
         try{
             const {name,description,startingDate,expiryDate,minimumAmount,discountType,discount}=req.body
@@ -76,6 +79,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Edit coupon
     editCoupon:async(req,res)=>{
         try{
             const {name,description,startingDate,expiryDate,minimumAmount,discountType,discount,id}=req.body
@@ -95,6 +99,7 @@ module.exports={
             req.redirect('/500')
         }
     },
+    //Cancel the coupon on admin dashboard
     cancelCoupon:async(req,res)=>{
         try{
             const {couponId}=req.body
@@ -108,6 +113,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Reactive the coupon on admin dashboard
     ReactiveCoupon:async(req,res)=>{
         try{
             const {couponId}=req.body
@@ -121,6 +127,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Applying the coupon in userside
     applyCoupn:async(req,res)=>{
         try{
             const {couponCode,total}=req.body
@@ -167,6 +174,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Cancel the coupon in user side
     cancelCouponuser:async(req,res)=>{
             try {
                 const { user } = req.session;

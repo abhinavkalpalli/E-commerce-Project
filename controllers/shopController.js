@@ -9,8 +9,10 @@ const cartSchema=require('../models/cartModel')
 const couponHelper=require('../helpers/couponHelper')
 const brandSchema=require('../models/brandModel')
 const bannerSchema = require( '../models/bannerModel' )
+const contactSchema=require('../models/contactModel')
 
 module.exports={
+    //Getting home page
     getHome:async(req,res)=>{
             const banners = await bannerSchema.find({
                 status: true,
@@ -33,6 +35,7 @@ module.exports={
         res.render('shop/home',{products:products,banners : banners})
     
     },
+    //Getshop
     getShop:async(req,res)=>{
         try{
             const {cat,brand,search}=req.query
@@ -93,6 +96,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Single product
     getSingleProduct:async(req,res)=>{
         try{
             const product = await productSchema.find({ _id : req.params.id, status : true })
@@ -115,6 +119,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Checkout page
     getCheckout : async( req, res ) => {
         try {
             const { user } = req.session
@@ -145,6 +150,7 @@ module.exports={
     getCheckoutAddAddress:async(req,res)=>{
         res.render('shop/checkout-address')
     },
+    //Adding checkout address
     checkoutAddAddress:async(req,res)=>{
         try{
             const address=new addressSchema({
@@ -170,6 +176,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //Product review
     review:async(req,res)=>{
         try{
             const {rating,comment,productId}=req.body
@@ -203,5 +210,24 @@ module.exports={
             console.log(error.message);
             res.redirect('/500')
         }
+    },
+    contactus:async(req,res)=>{
+        res.render('shop/contact')
+    },
+    contactsubmit:async(req,res)=>{
+        try{
+      const {email,phone,idea}=req.body
+      const comments=await contactSchema({
+        Email:email,
+        Idea:idea,
+        contact:phone
+      })
+      await comments.save()
+    }catch(error){
+        res.redirect('/500')
+        
     }
+    },
+
+
 }

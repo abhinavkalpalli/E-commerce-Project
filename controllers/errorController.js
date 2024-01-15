@@ -1,4 +1,5 @@
 module.exports={
+    //error pages
     get404:(req,res)=>{
         res.render('error/404')
     },

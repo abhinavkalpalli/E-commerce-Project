@@ -2,6 +2,7 @@ const bcrypt =require('bcryptjs')
 const userSchema=require('../models/userModel')
 const verificationController = require('./verificationController')
 const adminSchema = require('../models/adminSchema')
+const cartSchema=require('../models/cartModel')
 
 module.exports={
 //Get user login page
@@ -21,7 +22,14 @@ module.exports={
                     const password=await bcrypt.compare(req.body.password,userData.password)
                     if(password){
                         if(userData.isVerified){
+                            const productCount=await cartSchema.findOne({userId:userData._id})
                             req.session.user=userData._id
+                            if(productCount){
+                            req.session.productCount=productCount.items.length
+                            }else{
+                                req.session.productCount=0
+                            }
+                            
                             res.redirect('/shop')
                         }else{
                             const newOtp = verificationController.sendEmail(req.body.email, req.body.lastName)
@@ -54,6 +62,7 @@ module.exports={
             }
         }catch(error){
             res.redirect('/500')
+            console.log(error)
         
         }
     },
@@ -61,6 +70,7 @@ module.exports={
     doUserLogout:(req,res)=>{
         try{
             req.session.user=null
+            req.session.productCount=0;
             res.redirect('/login')
         }catch(error){
             res.redirect('/500')
@@ -189,6 +199,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //admin login
     getAdminLogin:async (req,res)=>{
         res.render('auth/adminLogin',{err:false})
     },
@@ -218,11 +229,12 @@ module.exports={
     doAdminLogout:(req,res)=>{
         try{
             req.session.admin=null
-            res.redirect('/admin-login')
+            res.redirect('/admin/admin-login')
         }catch(error){
             res.redirect('/500')
         }
     },
+    //otp resend
     resendOtp:async(req,res)=>{
         try{
             let email=req.session.unVerfiedMail

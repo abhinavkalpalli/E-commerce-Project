@@ -3,9 +3,10 @@ const paginationHelper=require('../helpers/paginationHelper')
 const productSchema=require('../models/productModel')
 const orderSchema=require('../models/orderModel')
 const dashboardHelper=require('../helpers/dashboardHelper')
+const contactSchema=require('../models/contactModel')
 
 
-
+//Adminhome
 module.exports={
     getAdminHome:async(req,res)=>{
         try{
@@ -84,6 +85,7 @@ module.exports={
             res.redirect('/500')
         }
     },
+    //userlist
     getUserList : async( req, res ) => {
 
         try {
@@ -171,5 +173,14 @@ module.exports={
             res.redirect('/500')
         }
         
+    },
+    ideas:async(req,res)=>{
+        try{
+            const ideas=await contactSchema.find()
+           
+            res.render('admin/ideas',{admin : req.session.admin,ideas:ideas})
+        }catch(error){
+            res.redirect('/500')
+        }
     }   
 }

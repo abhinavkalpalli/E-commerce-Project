@@ -1,0 +1,64 @@
+<%- include('../includes/admin/adminHead.ejs') %>
+<%- include('../includes/admin/adminNavbar.ejs') %>
+
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #000;
+        color: #fff;
+        margin: 0;
+        padding: 0;
+    }
+
+    .data-container {
+        width: 40%;
+        margin: 50px auto;
+        background-color: #000;
+        color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .data-box {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #333;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        background-color: #111;
+    }
+
+    .data-box p {
+        margin: 0;
+        color: #fff;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .data-box strong {
+        margin-right: 5px;
+    }
+
+    .data-box-header {
+        background-color: #333;
+        font-weight: bold;
+        padding: 15px;
+        border-radius: 8px 8px 0 0;
+    }
+</style>
+    
+<div class="data-container">
+    <% if(ideas && ideas.length > 0) { %>
+        <% for (let item of ideas) { %>
+            <div class="data-box">
+                <p class="data-box-header"><strong>Email:</strong> <%= item.Email %></p>
+                <p class="data-box-header"><strong>Phone:</strong> <%= item.contact %></p>
+                <p class="data-box-header"><strong>Idea:</strong> <%= item.Idea %></p>
+            </div>
+        <% } %>
+    <% } %>
+</div>
+
+<%- include('../includes/admin/adminFooter.ejs') %>
