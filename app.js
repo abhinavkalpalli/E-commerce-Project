@@ -64,6 +64,9 @@ app.use('/admin',adminRouter);
 app.use('/user',userRouter)
 app.use('/500',errorController.get500)
 app.use('/404',errorController.get404)
+app.all('*',async(req,res)=>{
+    res.redirect('/404')
+})
 
 const PORT=process.env.PORT||3000;
 app.listen(PORT,()=>{
