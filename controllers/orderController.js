@@ -271,6 +271,7 @@ module.exports={
     },
     //Cancelling the order
     userCancelOrder:async(req,res)=>{
+        
         try{
             const {orderId,status}=req.body
             const {user}=req.session
@@ -293,7 +294,22 @@ module.exports={
                         }
                     })
                 }
-            }
+            }if(order.orderStatus ==='Confirmed' && order.paymentMethod==='razorpay'){
+            
+                    await userSchema.updateOne({_id:user},{
+                        $inc:{
+                            wallet:order.totalPrice
+                        },
+                        $push:{
+                            walletHistory:{
+                                date:Date.now(),
+                                amount:order.totalPrice,
+                                message:"Deposited while cancelled order"
+                            }
+                        }
+                    })
+                }
+            
             await orderSchema.findOneAndUpdate({_id:orderId},{$set:{orderStatus:status}})
             const newStatus=await orderSchema.findOne({_id:orderId})
             res.status(200).json({success:true,status:newStatus.orderStatus})
@@ -307,10 +323,26 @@ module.exports={
             const {status,orderId}=req.body
             if(status==='Cancelled'){
                 //if order cancelled
+                
                 const order=await orderSchema.findOne({_id:orderId})
                 for(let prodcuts of order.products){
                     await productSchema.updateOne({_id:prodcuts.productId},{
                         $inc:{quantity:prodcuts.quantity}
+                    })
+                }
+                if(order.paymentMethod==='razorpay'){
+
+                    await userSchema.updateOne({_id:order.userId},{
+                        $inc:{
+                            wallet:order.totalPrice
+                        },
+                        $push:{
+                            walletHistory:{
+                                date:Date.now(),
+                                amount:order.totalPrice,
+                                message:"Deposited while cancelled order"
+                            }
+                        }
                     })
                 }
                 //sets the order status
